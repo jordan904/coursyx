@@ -1,0 +1,15 @@
+{
+  "framework": "nextjs",
+  "buildCommand": "next build",
+  "devCommand": "next dev",
+  "installCommand": "npm install",
+  "functions": {
+    "app/api/generate-outline/route.ts": { "maxDuration": 60 },
+    "app/api/generate-course/route.ts": { "maxDuration": 60 },
+    "app/api/generate-cover-image/route.ts": { "maxDuration": 60 },
+    "app/api/expand-lesson/route.ts": { "maxDuration": 60 },
+    "app/api/parse-document/route.ts": { "maxDuration": 60 },
+    "app/api/extract-youtube/route.ts": { "maxDuration": 60 },
+    "app/api/scrape-url/route.ts": { "maxDuration": 60 }
+  }
+}
