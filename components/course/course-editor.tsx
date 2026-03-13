@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import Image from 'next/image'
 import toast from 'react-hot-toast'
 import {
@@ -58,6 +59,7 @@ import {
   CheckCircle,
   Download,
   Sparkles,
+  ArrowLeft,
 } from 'lucide-react'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -90,6 +92,7 @@ type Course = {
   target_audience: string | null
   language: string | null
   cover_image_url: string | null
+  cover_image_history: string[] | null
   generated_json: Module[] | null
   status: string
 }
@@ -225,6 +228,11 @@ export function CourseEditor({ course }: { course: Course }) {
   const [activePost, setActivePost] = useState<string | null>(null)
 
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false)
+  const [coverHistory, setCoverHistory] = useState<string[]>(
+    () => (course.cover_image_history as string[]) ?? []
+  )
+  const [coverPrompt, setCoverPrompt] = useState('')
+  const [enrichmentExpanded, setEnrichmentExpanded] = useState(false)
 
   // Settings fields
   const [settingsTitle, setSettingsTitle] = useState(course.title)
@@ -416,6 +424,89 @@ export function CourseEditor({ course }: { course: Course }) {
     }, 2000)
   }
 
+  // ─── Download cover image with title baked in ────────────────────────────
+
+  const handleDownloadCover = async () => {
+    if (!coverImageUrl) return
+
+    const canvas = document.createElement('canvas')
+    canvas.width = 1280
+    canvas.height = 720
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+
+    const img = new window.Image()
+    img.crossOrigin = 'anonymous'
+    img.src = coverImageUrl
+    await new Promise<void>((resolve, reject) => {
+      img.onload = () => resolve()
+      img.onerror = () => reject()
+    })
+    ctx.drawImage(img, 0, 0, 1280, 720)
+
+    // Dark gradient overlay on bottom half
+    const grad = ctx.createLinearGradient(0, 720, 0, 340)
+    grad.addColorStop(0, 'rgba(0,0,0,0.85)')
+    grad.addColorStop(1, 'rgba(0,0,0,0)')
+    ctx.fillStyle = grad
+    ctx.fillRect(0, 340, 1280, 380)
+
+    // Draw title text with word wrapping
+    ctx.fillStyle = '#FFFFFF'
+    ctx.shadowColor = 'rgba(0,0,0,0.8)'
+    ctx.shadowBlur = 16
+    ctx.textBaseline = 'top'
+
+    const title = course.title || 'Untitled Course'
+    const maxWidth = 1180
+    const x = 50
+    let fontSize = 56
+
+    // Scale font down if title is very long
+    if (title.length > 60) fontSize = 44
+    else if (title.length > 40) fontSize = 48
+
+    ctx.font = `bold ${fontSize}px "DM Sans", sans-serif`
+    const lineHeight = fontSize * 1.2
+
+    // Word-wrap
+    const words = title.split(' ')
+    const lines: string[] = []
+    let currentLine = words[0]
+    for (let i = 1; i < words.length; i++) {
+      const test = currentLine + ' ' + words[i]
+      if (ctx.measureText(test).width > maxWidth) {
+        lines.push(currentLine)
+        currentLine = words[i]
+      } else {
+        currentLine = test
+      }
+    }
+    lines.push(currentLine)
+
+    // Position text from bottom
+    const textBlockHeight = lines.length * lineHeight
+    const startY = 700 - textBlockHeight - 20
+
+    for (let i = 0; i < lines.length; i++) {
+      ctx.fillText(lines[i], x, startY + i * lineHeight)
+    }
+
+    canvas.toBlob(
+      (blob) => {
+        if (!blob) return
+        const a = document.createElement('a')
+        a.href = URL.createObjectURL(blob)
+        a.download = `${title.replace(/[^a-zA-Z0-9 ]/g, '').replace(/\s+/g, '-').toLowerCase()}-cover.jpg`
+        a.click()
+        URL.revokeObjectURL(a.href)
+        toast.success('Cover image downloaded!')
+      },
+      'image/jpeg',
+      0.95
+    )
+  }
+
   // ─── Generate cover image ─────────────────────────────────────────────────
 
   const handleGenerateCoverImage = async () => {
@@ -424,7 +515,7 @@ export function CourseEditor({ course }: { course: Course }) {
       const res = await fetch('/api/generate-cover-image', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ courseId }),
+        body: JSON.stringify({ courseId, customPrompt: coverPrompt || undefined }),
       })
       if (res.status === 429) {
         toast.error("You've hit the limit. Try again in an hour.")
@@ -437,6 +528,9 @@ export function CourseEditor({ course }: { course: Course }) {
       }
       const data = await res.json()
       setCoverImageUrl(data.coverImageUrl)
+      if (data.coverImageHistory) {
+        setCoverHistory(data.coverImageHistory)
+      }
       toast.success('Cover image generated!')
     } catch {
       toast.error('Connection error. Check your internet.')
@@ -573,6 +667,43 @@ export function CourseEditor({ course }: { course: Course }) {
       setGeneratingPost(false)
     }
   }
+
+  // ─── Switch cover image from history ──────────────────────────────────────
+
+  const handleSwitchCoverImage = async (url: string) => {
+    setCoverImageUrl(url)
+    try {
+      await fetch(`/api/course/${courseId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cover_image_url: url }),
+      })
+    } catch {
+      toast.error('Connection error. Check your internet.')
+    }
+  }
+
+  // ─── Download enrichment as .txt ────────────────────────────────────────────
+
+  const downloadTextFile = (content: string, filename: string) => {
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = filename
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  }
+
+  const formatQuizText = (quiz: QuizQuestion[]) =>
+    quiz
+      .map(
+        (q, i) =>
+          `${i + 1}. ${q.question}\n   a) ${q.options.a}\n   b) ${q.options.b}\n   c) ${q.options.c}\n   d) ${q.options.d}\n   Correct: ${q.correct}) ${q.options[q.correct]}\n   ${q.explanation}`
+      )
+      .join('\n\n')
 
   // ─── Settings: save on blur ───────────────────────────────────────────────
 
@@ -873,8 +1004,34 @@ export function CourseEditor({ course }: { course: Course }) {
 
   // ─── Sidebar content (reused in drawer + desktop) ─────────────────────────
 
+  // ─── Enrichment items for sidebar ─────────────────────────────────────────
+
+  const enrichmentItems: { type: string; label: string; moduleIdx: number; lessonIdx?: number }[] = []
+  modules.forEach((mod, mIdx) => {
+    if (quizMap[mIdx]) {
+      enrichmentItems.push({ type: 'quiz', label: `${mod.module_title} — Quiz`, moduleIdx: mIdx })
+    }
+    if (postMap[mIdx]) {
+      enrichmentItems.push({ type: 'post', label: `${mod.module_title} — Discussion`, moduleIdx: mIdx })
+    }
+    mod.lessons.forEach((lesson, lIdx) => {
+      if (scriptMap[`${mIdx}-${lIdx}`]) {
+        enrichmentItems.push({ type: 'script', label: `${lesson.lesson_title} — Script`, moduleIdx: mIdx, lessonIdx: lIdx })
+      }
+    })
+  })
+
   const sidebarContent = (
     <div className="flex flex-col h-full">
+      {/* Back to Dashboard */}
+      <Link
+        href="/dashboard"
+        className="flex items-center gap-2 px-4 py-3 text-sm text-[#8A8F98] hover:text-[#E8E3D5] border-b border-[#2A2E35] transition-colors duration-150"
+      >
+        <ArrowLeft className="size-4" />
+        Back to Dashboard
+      </Link>
+
       {/* Course title */}
       <div className="p-4 border-b border-[#2A2E35]">
         <h2 className="font-heading text-lg text-[#E8E3D5] truncate">
@@ -893,28 +1050,88 @@ export function CourseEditor({ course }: { course: Course }) {
               className="object-cover"
               sizes="280px"
             />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+            <p className="absolute bottom-2 left-2 right-2 font-heading text-xs leading-tight text-white drop-shadow-lg line-clamp-2">
+              {course.title}
+            </p>
           </div>
         ) : (
-          <div className="aspect-video rounded-[6px] bg-gradient-to-br from-[#E8622A]/20 to-[#161A1F] mb-2" />
+          <div className="aspect-video rounded-[6px] bg-gradient-to-br from-[#E8622A]/20 to-[#161A1F] mb-2 flex items-center justify-center">
+            <p className="text-[#8A8F98] text-xs text-center px-4">Generate a cover image below</p>
+          </div>
         )}
-        <Button
-          onClick={handleGenerateCoverImage}
-          disabled={generatingImage}
-          variant="outline"
-          className="w-full rounded-[6px] text-xs"
-        >
-          {generatingImage ? (
-            <>
-              <Loader2 className="size-3 animate-spin mr-1" />
-              Generating...
-            </>
-          ) : (
-            <>
-              <ImageIcon className="size-3 mr-1" />
-              {coverImageUrl ? 'Regenerate Cover Image' : 'Generate Cover Image'}
-            </>
+        <input
+          type="text"
+          value={coverPrompt}
+          onChange={(e) => setCoverPrompt(e.target.value)}
+          placeholder="Optional: describe a style or mood..."
+          className="w-full px-2 py-1.5 mb-2 bg-[#0D0F12] border border-[#2A2E35] rounded-[6px] text-[#E8E3D5] text-xs outline-none focus:border-[#E8622A] transition-colors duration-150 placeholder:text-[#8A8F98]/60"
+        />
+        <div className="flex gap-2 mb-2">
+          <Button
+            onClick={handleGenerateCoverImage}
+            disabled={generatingImage}
+            variant="outline"
+            className="flex-1 rounded-[6px] text-xs"
+          >
+            {generatingImage ? (
+              <>
+                <Loader2 className="size-3 animate-spin mr-1" />
+                Generating...
+              </>
+            ) : (
+              <>
+                <ImageIcon className="size-3 mr-1" />
+                {coverImageUrl ? 'Regenerate' : 'Generate Cover'}
+              </>
+            )}
+          </Button>
+          {coverImageUrl && (
+            <Button
+              onClick={handleDownloadCover}
+              variant="outline"
+              className="rounded-[6px] text-xs"
+              aria-label="Download cover image for Skool"
+            >
+              <Download className="size-3 mr-1" />
+              Skool
+            </Button>
           )}
-        </Button>
+        </div>
+        {coverImageUrl && (
+          <p className="text-[10px] text-[#8A8F98] leading-snug mb-2">
+            <span className="text-[#E8622A] font-medium">Download for Skool</span> adds your course title to the image. Upload the downloaded file as your Skool Classroom cover.
+          </p>
+        )}
+        {coverHistory.length > 1 && (
+          <div className="mt-2">
+            <p className="text-[10px] text-[#8A8F98] mb-1">
+              {coverHistory.length}/5 images
+            </p>
+            <div className="flex gap-1.5 overflow-x-auto">
+              {coverHistory.map((url, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => handleSwitchCoverImage(url)}
+                  className={`relative shrink-0 w-12 h-8 rounded overflow-hidden border transition-colors duration-150 ${
+                    url === coverImageUrl
+                      ? 'border-[#E8622A]'
+                      : 'border-[#2A2E35] hover:border-[#8A8F98]'
+                  }`}
+                  aria-label={`Switch to cover image ${idx + 1}`}
+                >
+                  <Image
+                    src={url}
+                    alt={`Cover ${idx + 1}`}
+                    fill
+                    className="object-cover"
+                    sizes="48px"
+                  />
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Module list */}
@@ -947,6 +1164,76 @@ export function CourseEditor({ course }: { course: Course }) {
           Reorder modules on desktop
         </p>
       </div>
+
+      {/* Enrichment section */}
+      {enrichmentItems.length > 0 && (
+        <div className="border-t border-[#2A2E35]">
+          <button
+            onClick={() => setEnrichmentExpanded(!enrichmentExpanded)}
+            className="flex items-center gap-2 w-full px-3 py-2 text-sm text-[#8A8F98] hover:text-[#E8E3D5] transition-colors duration-150"
+          >
+            {enrichmentExpanded ? (
+              <ChevronDown className="size-4" />
+            ) : (
+              <ChevronRight className="size-4" />
+            )}
+            <Sparkles className="size-3" />
+            Enrichment ({enrichmentItems.length})
+          </button>
+          {enrichmentExpanded && (
+            <div className="px-2 pb-2 space-y-0.5">
+              {enrichmentItems.map((item, idx) => (
+                <div key={idx} className="flex items-center gap-1">
+                  <button
+                    onClick={() => {
+                      if (item.type === 'quiz') {
+                        setActiveQuiz(quizMap[item.moduleIdx]!)
+                        setQuizModalOpen(true)
+                      } else if (item.type === 'post') {
+                        setActivePost(postMap[item.moduleIdx]!)
+                        setPostModalOpen(true)
+                      } else if (item.type === 'script') {
+                        setActiveScript(scriptMap[`${item.moduleIdx}-${item.lessonIdx}`]!)
+                        setScriptModalOpen(true)
+                      }
+                    }}
+                    className="flex-1 flex items-center gap-1.5 text-xs text-[#8A8F98] hover:text-[#E8E3D5] px-2 py-1 rounded-[6px] hover:bg-[#2A2E35]/50 transition-colors duration-150 truncate text-left"
+                  >
+                    {item.type === 'quiz' && <FileText className="size-3 shrink-0" />}
+                    {item.type === 'post' && <MessageSquare className="size-3 shrink-0" />}
+                    {item.type === 'script' && <Video className="size-3 shrink-0" />}
+                    <span className="truncate">{item.label}</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (item.type === 'quiz') {
+                        downloadTextFile(
+                          formatQuizText(quizMap[item.moduleIdx]!),
+                          `quiz-module-${item.moduleIdx + 1}.txt`
+                        )
+                      } else if (item.type === 'post') {
+                        downloadTextFile(
+                          postMap[item.moduleIdx]!,
+                          `discussion-module-${item.moduleIdx + 1}.txt`
+                        )
+                      } else if (item.type === 'script') {
+                        downloadTextFile(
+                          scriptMap[`${item.moduleIdx}-${item.lessonIdx}`]!,
+                          `script-m${item.moduleIdx + 1}-l${(item.lessonIdx ?? 0) + 1}.txt`
+                        )
+                      }
+                    }}
+                    className="shrink-0 p-1 text-[#8A8F98] hover:text-[#E8E3D5] transition-colors duration-150"
+                    aria-label={`Download ${item.label}`}
+                  >
+                    <Download className="size-3" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Settings gear */}
       <div className="p-3 border-t border-[#2A2E35]">
@@ -1322,20 +1609,35 @@ export function CourseEditor({ course }: { course: Course }) {
             </pre>
           </div>
           <div className="flex justify-between mt-4">
-            <Button
-              onClick={() => {
-                if (activeScript) {
-                  navigator.clipboard.writeText(activeScript)
-                  toast.success('Script copied!')
-                }
-              }}
-              variant="outline"
-              size="sm"
-              className="rounded-[6px]"
-            >
-              <Copy className="size-3 mr-1" />
-              Copy
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                onClick={() => {
+                  if (activeScript) {
+                    navigator.clipboard.writeText(activeScript)
+                    toast.success('Script copied!')
+                  }
+                }}
+                variant="outline"
+                size="sm"
+                className="rounded-[6px]"
+              >
+                <Copy className="size-3 mr-1" />
+                Copy
+              </Button>
+              <Button
+                onClick={() => {
+                  if (activeScript) {
+                    downloadTextFile(activeScript, `video-script.txt`)
+                  }
+                }}
+                variant="outline"
+                size="sm"
+                className="rounded-[6px]"
+              >
+                <Download className="size-3 mr-1" />
+                Download
+              </Button>
+            </div>
             <Button
               onClick={() => {
                 setScriptModalOpen(false)
@@ -1393,26 +1695,35 @@ export function CourseEditor({ course }: { course: Course }) {
             ))}
           </div>
           <div className="flex justify-between mt-4">
-            <Button
-              onClick={() => {
-                if (activeQuiz) {
-                  const text = activeQuiz
-                    .map(
-                      (q, i) =>
-                        `${i + 1}. ${q.question}\n   a) ${q.options.a}\n   b) ${q.options.b}\n   c) ${q.options.c}\n   d) ${q.options.d}\n   Correct: ${q.correct}) ${q.options[q.correct]}\n   ${q.explanation}`
-                    )
-                    .join('\n\n')
-                  navigator.clipboard.writeText(text)
-                  toast.success('Quiz copied!')
-                }
-              }}
-              variant="outline"
-              size="sm"
-              className="rounded-[6px]"
-            >
-              <Copy className="size-3 mr-1" />
-              Copy
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                onClick={() => {
+                  if (activeQuiz) {
+                    navigator.clipboard.writeText(formatQuizText(activeQuiz))
+                    toast.success('Quiz copied!')
+                  }
+                }}
+                variant="outline"
+                size="sm"
+                className="rounded-[6px]"
+              >
+                <Copy className="size-3 mr-1" />
+                Copy
+              </Button>
+              <Button
+                onClick={() => {
+                  if (activeQuiz) {
+                    downloadTextFile(formatQuizText(activeQuiz), `quiz.txt`)
+                  }
+                }}
+                variant="outline"
+                size="sm"
+                className="rounded-[6px]"
+              >
+                <Download className="size-3 mr-1" />
+                Download
+              </Button>
+            </div>
             <Button
               onClick={() => {
                 setQuizModalOpen(false)
@@ -1445,20 +1756,35 @@ export function CourseEditor({ course }: { course: Course }) {
             </p>
           </div>
           <div className="flex justify-between mt-4">
-            <Button
-              onClick={() => {
-                if (activePost) {
-                  navigator.clipboard.writeText(activePost)
-                  toast.success('Discussion post copied!')
-                }
-              }}
-              variant="outline"
-              size="sm"
-              className="rounded-[6px]"
-            >
-              <Copy className="size-3 mr-1" />
-              Copy
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                onClick={() => {
+                  if (activePost) {
+                    navigator.clipboard.writeText(activePost)
+                    toast.success('Discussion post copied!')
+                  }
+                }}
+                variant="outline"
+                size="sm"
+                className="rounded-[6px]"
+              >
+                <Copy className="size-3 mr-1" />
+                Copy
+              </Button>
+              <Button
+                onClick={() => {
+                  if (activePost) {
+                    downloadTextFile(activePost, `discussion-post.txt`)
+                  }
+                }}
+                variant="outline"
+                size="sm"
+                className="rounded-[6px]"
+              >
+                <Download className="size-3 mr-1" />
+                Download
+              </Button>
+            </div>
             <Button
               onClick={() => {
                 setPostModalOpen(false)
