@@ -107,7 +107,7 @@ export default function LandingPage() {
       </div>
 
       {/* Demo video + TikTok link */}
-      <div className="max-w-4xl mx-auto px-6 pb-24">
+      <div className="max-w-md mx-auto px-6 pb-24">
         <div className="animate-fade-up" style={{ animationDelay: '600ms' }}>
           <video
             src="/demo.mov"
@@ -115,7 +115,7 @@ export default function LandingPage() {
             loop
             muted
             playsInline
-            className="w-full rounded-[6px] border border-[var(--border)]"
+            className="w-full max-h-[70vh] object-contain rounded-[6px] border border-[var(--border)]"
           />
           <div className="mt-4 text-center">
             <a
