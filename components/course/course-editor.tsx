@@ -216,6 +216,7 @@ export function CourseEditor({ course }: { course: Course }) {
   const [expanding, setExpanding] = useState(false)
   const [coverImageUrl, setCoverImageUrl] = useState(course.cover_image_url)
   const [generatingImage, setGeneratingImage] = useState(false)
+  const [includeTitleOnCover, setIncludeTitleOnCover] = useState(true)
   const [generatingQuiz, setGeneratingQuiz] = useState(false)
   const [generatingScript, setGeneratingScript] = useState(false)
   const [generatingPost, setGeneratingPost] = useState(false)
@@ -444,52 +445,75 @@ export function CourseEditor({ course }: { course: Course }) {
     })
     ctx.drawImage(img, 0, 0, 1280, 720)
 
-    // Dark gradient overlay on bottom half
-    const grad = ctx.createLinearGradient(0, 720, 0, 340)
-    grad.addColorStop(0, 'rgba(0,0,0,0.85)')
-    grad.addColorStop(1, 'rgba(0,0,0,0)')
-    ctx.fillStyle = grad
-    ctx.fillRect(0, 340, 1280, 380)
+    // Only add text overlay if the image was generated without a title
+    if (!includeTitleOnCover) {
+      // Dark gradient overlay on lower third
+      const grad = ctx.createLinearGradient(0, 720, 0, 380)
+      grad.addColorStop(0, 'rgba(0,0,0,0.9)')
+      grad.addColorStop(0.6, 'rgba(0,0,0,0.5)')
+      grad.addColorStop(1, 'rgba(0,0,0,0)')
+      ctx.fillStyle = grad
+      ctx.fillRect(0, 380, 1280, 340)
 
-    // Draw title text with word wrapping
-    ctx.fillStyle = '#FFFFFF'
-    ctx.shadowColor = 'rgba(0,0,0,0.8)'
-    ctx.shadowBlur = 16
-    ctx.textBaseline = 'top'
+      const title = course.title || 'Untitled Course'
+      const maxWidth = 1140
+      const x = 64
+      let fontSize = 62
 
-    const title = course.title || 'Untitled Course'
-    const maxWidth = 1180
-    const x = 50
-    let fontSize = 56
+      // Scale font down for longer titles
+      if (title.length > 80) fontSize = 40
+      else if (title.length > 60) fontSize = 46
+      else if (title.length > 40) fontSize = 52
 
-    // Scale font down if title is very long
-    if (title.length > 60) fontSize = 44
-    else if (title.length > 40) fontSize = 48
+      ctx.font = `800 ${fontSize}px "DM Sans", "Helvetica Neue", Arial, sans-serif`
+      ctx.textBaseline = 'top'
+      const lineHeight = fontSize * 1.15
 
-    ctx.font = `bold ${fontSize}px "DM Sans", sans-serif`
-    const lineHeight = fontSize * 1.2
-
-    // Word-wrap
-    const words = title.split(' ')
-    const lines: string[] = []
-    let currentLine = words[0]
-    for (let i = 1; i < words.length; i++) {
-      const test = currentLine + ' ' + words[i]
-      if (ctx.measureText(test).width > maxWidth) {
-        lines.push(currentLine)
-        currentLine = words[i]
-      } else {
-        currentLine = test
+      // Word-wrap
+      const words = title.split(' ')
+      const lines: string[] = []
+      let currentLine = words[0]
+      for (let i = 1; i < words.length; i++) {
+        const test = currentLine + ' ' + words[i]
+        if (ctx.measureText(test).width > maxWidth) {
+          lines.push(currentLine)
+          currentLine = words[i]
+        } else {
+          currentLine = test
+        }
       }
-    }
-    lines.push(currentLine)
+      lines.push(currentLine)
 
-    // Position text from bottom
-    const textBlockHeight = lines.length * lineHeight
-    const startY = 700 - textBlockHeight - 20
+      // Position text from bottom with padding
+      const textBlockHeight = lines.length * lineHeight
+      const startY = 690 - textBlockHeight
 
-    for (let i = 0; i < lines.length; i++) {
-      ctx.fillText(lines[i], x, startY + i * lineHeight)
+      // Draw text with stroke outline + shadow for readability on any background
+      for (let i = 0; i < lines.length; i++) {
+        const ly = startY + i * lineHeight
+
+        // Layer 1: dark shadow for depth
+        ctx.shadowColor = 'rgba(0,0,0,0.9)'
+        ctx.shadowBlur = 20
+        ctx.shadowOffsetX = 0
+        ctx.shadowOffsetY = 4
+
+        // Layer 2: dark stroke outline
+        ctx.strokeStyle = 'rgba(0,0,0,0.7)'
+        ctx.lineWidth = 6
+        ctx.lineJoin = 'round'
+        ctx.strokeText(lines[i], x, ly)
+
+        // Layer 3: white fill
+        ctx.fillStyle = '#FFFFFF'
+        ctx.fillText(lines[i], x, ly)
+      }
+
+      // Reset shadow
+      ctx.shadowColor = 'transparent'
+      ctx.shadowBlur = 0
+      ctx.shadowOffsetX = 0
+      ctx.shadowOffsetY = 0
     }
 
     canvas.toBlob(
@@ -497,7 +521,8 @@ export function CourseEditor({ course }: { course: Course }) {
         if (!blob) return
         const a = document.createElement('a')
         a.href = URL.createObjectURL(blob)
-        a.download = `${title.replace(/[^a-zA-Z0-9 ]/g, '').replace(/\s+/g, '-').toLowerCase()}-cover.jpg`
+        const filename = (course.title || 'course').replace(/[^a-zA-Z0-9 ]/g, '').replace(/\s+/g, '-').toLowerCase()
+        a.download = `${filename}-cover.jpg`
         a.click()
         URL.revokeObjectURL(a.href)
         toast.success('Cover image downloaded!')
@@ -515,7 +540,7 @@ export function CourseEditor({ course }: { course: Course }) {
       const res = await fetch('/api/generate-cover-image', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ courseId, customPrompt: coverPrompt || undefined }),
+        body: JSON.stringify({ courseId, customPrompt: coverPrompt || undefined, includeTitle: includeTitleOnCover }),
       })
       if (res.status === 429) {
         toast.error("You've hit the limit. Try again in an hour.")
@@ -1050,10 +1075,6 @@ export function CourseEditor({ course }: { course: Course }) {
               className="object-cover"
               sizes="280px"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
-            <p className="absolute bottom-2 left-2 right-2 font-heading text-xs leading-tight text-white drop-shadow-lg line-clamp-2">
-              {course.title}
-            </p>
           </div>
         ) : (
           <div className="aspect-video rounded-[6px] bg-gradient-to-br from-[#E8622A]/20 to-[#161A1F] mb-2 flex items-center justify-center">
@@ -1067,6 +1088,15 @@ export function CourseEditor({ course }: { course: Course }) {
           placeholder="Optional: describe a style or mood..."
           className="w-full px-2 py-1.5 mb-2 bg-[#0D0F12] border border-[#2A2E35] rounded-[6px] text-[#E8E3D5] text-xs outline-none focus:border-[#E8622A] transition-colors duration-150 placeholder:text-[#8A8F98]/60"
         />
+        <label className="flex items-center gap-2 mb-2 cursor-pointer select-none">
+          <input
+            type="checkbox"
+            checked={includeTitleOnCover}
+            onChange={(e) => setIncludeTitleOnCover(e.target.checked)}
+            className="accent-[#E8622A] size-3.5 rounded"
+          />
+          <span className="text-[11px] text-[#8A8F98]">Include course title on image</span>
+        </label>
         <div className="flex gap-2 mb-2">
           <Button
             onClick={handleGenerateCoverImage}
@@ -1091,18 +1121,18 @@ export function CourseEditor({ course }: { course: Course }) {
               onClick={handleDownloadCover}
               variant="outline"
               className="rounded-[6px] text-xs"
-              aria-label="Download cover image for Skool"
+              aria-label="Download cover image"
             >
               <Download className="size-3 mr-1" />
-              Skool
+              Download
             </Button>
           )}
         </div>
-        {coverImageUrl && (
-          <p className="text-[10px] text-[#8A8F98] leading-snug mb-2">
-            <span className="text-[#E8622A] font-medium">Download for Skool</span> adds your course title to the image. Upload the downloaded file as your Skool Classroom cover.
-          </p>
-        )}
+        <p className="text-[10px] text-[#8A8F98] leading-snug mb-2">
+          {includeTitleOnCover
+            ? 'Your course title will be rendered directly on the cover image. Download and upload to Skool as-is.'
+            : 'Cover will be generated without text. Use Download to get a version with your title added.'}
+        </p>
         {coverHistory.length > 1 && (
           <div className="mt-2">
             <p className="text-[10px] text-[#8A8F98] mb-1">

@@ -7,7 +7,7 @@ import { Redis } from '@upstash/redis'
 import { createClient } from '@/lib/supabase/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 
-export const maxDuration = 60
+export const maxDuration = 300
 
 const redis = new Redis({
   url: process.env.UPSTASH_REDIS_REST_URL!,
@@ -16,7 +16,7 @@ const redis = new Redis({
 
 const ratelimit = new Ratelimit({
   redis,
-  limiter: Ratelimit.slidingWindow(5, '1 h'),
+  limiter: Ratelimit.slidingWindow(50, '1 h'),
   prefix: 'ratelimit:generate-course',
 })
 
@@ -111,7 +111,7 @@ Source material:
 ${safeContent}`
 
   const result = streamText({
-    model: anthropic('claude-sonnet-4-6'),
+    model: anthropic('claude-sonnet-4-20250514'),
     messages: [
       {
         role: 'system',

@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase/client'
 import { Input } from '@/components/ui/input'
@@ -53,6 +54,7 @@ export default function LoginPage() {
     <main className="min-h-screen flex items-center justify-center px-4">
       <div className="w-full max-w-sm space-y-6">
         <div className="text-center">
+          <Image src="/logo.jpg" alt="Coursyx" width={64} height={64} className="size-16 mx-auto mb-4" />
           <h1 className="font-heading text-4xl mb-2">Welcome back</h1>
           <p className="text-sm text-[var(--muted-foreground)]">
             Sign in to your Coursyx account
@@ -104,9 +106,9 @@ export default function LoginPage() {
         </form>
 
         <p className="text-center text-sm text-[var(--muted-foreground)]">
-          Don&apos;t have an account?{' '}
-          <Link href="/signup" className="text-[var(--accent)] hover:underline">
-            Sign up
+          Need access?{' '}
+          <Link href="/" className="text-[var(--accent)] hover:underline">
+            Request a trial
           </Link>
         </p>
       </div>

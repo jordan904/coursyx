@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { LogOut, Plus } from 'lucide-react'
@@ -16,7 +17,8 @@ export function DashboardHeader() {
   return (
     <header className="border-b border-border bg-card">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-        <Link href="/dashboard" className="transition-opacity hover:opacity-80" style={{ transitionDuration: '150ms' }}>
+        <Link href="/dashboard" className="flex items-center gap-2 transition-opacity hover:opacity-80" style={{ transitionDuration: '150ms' }}>
+          <Image src="/logo.jpg" alt="Coursyx" width={32} height={32} className="size-8" />
           <h1 className="font-heading text-xl text-foreground">Coursyx</h1>
         </Link>
 

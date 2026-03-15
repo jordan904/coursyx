@@ -15,7 +15,7 @@ const redis = new Redis({
 
 const ratelimit = new Ratelimit({
   redis,
-  limiter: Ratelimit.slidingWindow(20, '1 h'),
+  limiter: Ratelimit.slidingWindow(50, '1 h'),
   prefix: 'ratelimit:generate-discussion-post',
 })
 
@@ -98,7 +98,7 @@ Learning outcomes: ${safeLearningOutcomes}`
 
   try {
     const { text } = await generateText({
-      model: anthropic('claude-sonnet-4-6'),
+      model: anthropic('claude-sonnet-4-20250514'),
       messages: [
         { role: 'system', content: DISCUSSION_SYSTEM_PROMPT },
         { role: 'user', content: userMessage },

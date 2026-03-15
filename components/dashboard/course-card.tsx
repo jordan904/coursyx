@@ -123,19 +123,13 @@ export function CourseCard({
       {/* Cover image or gradient placeholder */}
       <div className="relative aspect-video w-full overflow-hidden">
         {course.cover_image_url ? (
-          <>
-            <Image
-              src={course.cover_image_url}
-              alt={`Cover image for ${course.title}`}
-              fill
-              className="object-cover"
-              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
-            <h3 className="absolute bottom-2 left-3 right-3 font-heading text-sm leading-tight text-white drop-shadow-lg line-clamp-2">
-              {course.title}
-            </h3>
-          </>
+          <Image
+            src={course.cover_image_url}
+            alt={`Cover image for ${course.title}`}
+            fill
+            className="object-cover"
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+          />
         ) : (
           <div
             className="h-full w-full"

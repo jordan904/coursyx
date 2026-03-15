@@ -16,7 +16,7 @@ const redis = new Redis({
 
 const ratelimit = new Ratelimit({
   redis,
-  limiter: Ratelimit.slidingWindow(10, '1 h'),
+  limiter: Ratelimit.slidingWindow(50, '1 h'),
   prefix: 'ratelimit:generate-outline',
 })
 
@@ -93,10 +93,10 @@ export async function POST(request: Request) {
     console.warn('[truncated] raw_content exceeded 80k chars')
   }
 
-  // Set status to 'outline' before AI call
+  // Set status to 'generating' during AI call
   await supabaseAdmin
     .from('courses')
-    .update({ status: 'outline' })
+    .update({ status: 'generating' })
     .eq('id', courseId)
 
   // Build user message — user content in user message only, never in system prompt
@@ -108,7 +108,7 @@ Source material:
 ${safeContent}`
 
   const result = streamText({
-    model: anthropic('claude-sonnet-4-6'),
+    model: anthropic('claude-sonnet-4-20250514'),
     messages: [
       {
         role: 'system',

@@ -21,131 +21,161 @@ const ratelimit = new Ratelimit({
 const requestSchema = z.object({
   courseId: z.string().uuid(),
   customPrompt: z.string().max(500).optional(),
+  includeTitle: z.boolean().optional(),
 })
 
-function buildImagePrompt(title: string, audience: string, custom: string, contentSummary: string): string {
-  const pick = <T,>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)]
+// ─── Topic detection + visual style mapping ──────────────────────────────────
 
-  // Detect topic category from title + content to choose appropriate visual metaphors
+type TopicStyle = {
+  keywords: string[]
+  scene: string[]
+  colors: Array<{ r: number; g: number; b: number }>
+}
+
+const TOPIC_STYLES: TopicStyle[] = [
+  {
+    keywords: ['code', 'programming', 'software', 'developer', 'web', 'app', 'javascript', 'python', 'data', 'ai', 'machine learning', 'tech', 'api', 'database', 'saas', 'automation'],
+    scene: [
+      'A sleek dark workspace with a glowing monitor displaying abstract code patterns, clean desk with geometric tech objects, soft cyan light reflecting off surfaces',
+      'Abstract network of glowing nodes and pathways on a dark background, clean geometric shapes connected by thin luminous lines, minimal and modern',
+      'Futuristic dark control panel with holographic data visualizations floating above it, clean lines, professional tech aesthetic',
+    ],
+    colors: [{ r: 13, g: 15, b: 18 }, { r: 0, g: 180, b: 216 }, { r: 232, g: 98, b: 42 }],
+  },
+  {
+    keywords: ['business', 'marketing', 'sales', 'entrepreneur', 'money', 'finance', 'startup', 'growth', 'revenue', 'brand', 'strategy', 'lead', 'ecommerce', 'consulting'],
+    scene: [
+      'Elegant dark marble desk surface with a golden chess piece and scattered geometric shapes, dramatic directional lighting from the left, premium editorial feel',
+      'Abstract ascending golden staircase against a deep dark background, each step catching warm light, clean and aspirational composition',
+      'Luxurious dark workspace with gold accents, a leather-bound notebook and premium pen, warm amber light from one side, editorial photography style',
+    ],
+    colors: [{ r: 13, g: 15, b: 18 }, { r: 196, g: 164, b: 74 }, { r: 232, g: 98, b: 42 }],
+  },
+  {
+    keywords: ['fitness', 'health', 'workout', 'nutrition', 'diet', 'exercise', 'strength', 'yoga', 'wellness', 'body', 'muscle', 'weight', 'gym'],
+    scene: [
+      'Dramatic close-up of premium fitness equipment on a dark matte surface, a single kettlebell or dumbbell with orange rim lighting, moody and powerful',
+      'Dark gym floor with chalk dust particles floating in a beam of warm directional light, minimal composition, raw and authentic energy',
+      'Clean arrangement of fitness gear — jump rope, water bottle, towel — on dark concrete surface, overhead shot, editorial style with warm accent lighting',
+    ],
+    colors: [{ r: 13, g: 15, b: 18 }, { r: 232, g: 98, b: 42 }, { r: 220, g: 50, b: 47 }],
+  },
+  {
+    keywords: ['art', 'design', 'creative', 'photo', 'draw', 'paint', 'illustration', 'graphic', 'visual', 'color', 'aesthetic', 'craft', 'ui', 'ux'],
+    scene: [
+      'A dark artist workspace with paint tubes and brushes arranged artfully, splashes of vivid color against the dark surface, dramatic overhead light',
+      'Abstract fluid art frozen mid-pour, vivid magenta and gold paint streams against a pure black background, high contrast editorial shot',
+      'Clean dark desk with design tools — a stylus, color swatches, and a sketchbook — soft warm side lighting, minimal and modern',
+    ],
+    colors: [{ r: 13, g: 15, b: 18 }, { r: 200, g: 50, b: 150 }, { r: 232, g: 178, b: 42 }],
+  },
+  {
+    keywords: ['cook', 'food', 'recipe', 'kitchen', 'baking', 'chef', 'cuisine', 'meal', 'restaurant', 'nutrition'],
+    scene: [
+      'Overhead shot of fresh ingredients artfully arranged on a dark slate surface, herbs and spices with dramatic shadows, warm editorial food photography',
+      'A single elegant dish on a dark plate against a moody black background, steam rising, warm directional lighting from the side',
+      'Dark kitchen counter with copper cookware and fresh herbs, warm amber light, professional culinary photography aesthetic',
+    ],
+    colors: [{ r: 30, g: 20, b: 15 }, { r: 196, g: 130, b: 60 }, { r: 232, g: 98, b: 42 }],
+  },
+  {
+    keywords: ['music', 'audio', 'sound', 'production', 'instrument', 'singing', 'beat', 'mix', 'song', 'podcast'],
+    scene: [
+      'Close-up of a premium microphone on a dark background with subtle purple and blue lighting, professional studio atmosphere, clean composition',
+      'Dark recording studio with mixing console, soft neon purple and blue reflections on surfaces, moody and atmospheric',
+      'Abstract sound waves visualized as luminous flowing ribbons against a deep dark background, purple and indigo tones, ethereal and modern',
+    ],
+    colors: [{ r: 13, g: 15, b: 18 }, { r: 100, g: 50, b: 180 }, { r: 50, g: 120, b: 220 }],
+  },
+  {
+    keywords: ['writing', 'content', 'copy', 'blog', 'author', 'book', 'story', 'journal', 'publish', 'newsletter'],
+    scene: [
+      'An open leather-bound journal on a dark wooden desk, warm light from a single source illuminating the pages, elegant pen beside it, editorial still life',
+      'Stack of hardcover books on a dark surface with warm side lighting, one book open with pages fanning, moody library atmosphere',
+      'Minimalist dark desk with a vintage typewriter, warm amber key light, professional editorial photography, clean negative space',
+    ],
+    colors: [{ r: 25, g: 20, b: 18 }, { r: 200, g: 180, b: 140 }, { r: 232, g: 98, b: 42 }],
+  },
+  {
+    keywords: ['mindset', 'psychology', 'habit', 'productivity', 'personal', 'self', 'motivation', 'confidence', 'leadership', 'communication', 'relationship', 'coaching', 'spiritual'],
+    scene: [
+      'A single lit candle on a dark surface creating a warm glow, smooth stones stacked in balance nearby, minimal and contemplative, soft warm light',
+      'Abstract sunrise colors emerging from darkness — warm gold and soft orange gradients transitioning from deep black, hopeful and expansive',
+      'Clean dark surface with a compass and a clear path of light leading forward, metaphorical and aspirational, warm directional lighting',
+    ],
+    colors: [{ r: 13, g: 15, b: 18 }, { r: 232, g: 178, b: 42 }, { r: 232, g: 98, b: 42 }],
+  },
+  {
+    keywords: ['real estate', 'property', 'investing', 'rental', 'housing', 'mortgage', 'landlord'],
+    scene: [
+      'Architectural miniature model of a modern home on a dark surface, warm golden light from one side, premium editorial product shot',
+      'Dark moody aerial view of city buildings at night with warm window lights, professional architectural photography, high contrast',
+      'Golden key on a dark leather surface with soft directional light, minimal and elegant, real estate editorial style',
+    ],
+    colors: [{ r: 13, g: 15, b: 18 }, { r: 196, g: 164, b: 74 }, { r: 80, g: 100, b: 120 }],
+  },
+  {
+    keywords: ['social media', 'instagram', 'tiktok', 'youtube', 'influencer', 'creator', 'viral', 'followers', 'audience'],
+    scene: [
+      'Smartphone on a dark surface with colorful abstract light streaks emanating from the screen, modern and dynamic, clean editorial shot',
+      'Dark flat lay with a phone, ring light reflection, and content creation tools arranged geometrically, warm and cool accent lighting',
+      'Abstract network of glowing interconnected dots expanding outward from a central bright point, social graph visualization on dark background',
+    ],
+    colors: [{ r: 13, g: 15, b: 18 }, { r: 232, g: 98, b: 42 }, { r: 0, g: 180, b: 216 }],
+  },
+]
+
+const DEFAULT_SCENES = [
+  'Abstract geometric composition of translucent glass shapes catching warm directional light against a dark background, clean editorial style, bold and modern',
+  'Elegant dark surface with a single luminous geometric object casting long shadows, premium and minimal, warm amber accent light',
+  'Bold angular shapes and flowing gradients against a deep dark background, modern abstract art, professional and aspirational, high contrast',
+]
+
+const DEFAULT_COLORS = [{ r: 13, g: 15, b: 18 }, { r: 0, g: 180, b: 216 }, { r: 232, g: 98, b: 42 }]
+
+function buildPrompt(
+  title: string,
+  audience: string,
+  custom: string,
+  contentSummary: string,
+  includeTitle: boolean
+): string {
+  const pick = <T,>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)]
   const combined = `${title} ${contentSummary} ${audience}`.toLowerCase()
 
-  type TopicCategory = {
-    keywords: string[]
-    metaphors: string[]
-    palette: string
-  }
+  const matched = TOPIC_STYLES.find(cat => cat.keywords.some(kw => combined.includes(kw)))
+  const scene = pick(matched?.scene ?? DEFAULT_SCENES)
 
-  const categories: TopicCategory[] = [
-    {
-      keywords: ['code', 'programming', 'software', 'developer', 'web', 'app', 'javascript', 'python', 'data', 'ai', 'machine learning', 'tech', 'api', 'database'],
-      metaphors: [
-        'glowing circuit board pathways forming an intricate network, data streams flowing through nodes',
-        'abstract 3D wireframe structures with luminous connection points, floating geometric code blocks',
-        'crystalline data structures with light flowing through interconnected transparent nodes',
-      ],
-      palette: 'deep navy base with electric cyan and teal accents, warm amber highlight points',
-    },
-    {
-      keywords: ['business', 'marketing', 'sales', 'entrepreneur', 'money', 'finance', 'startup', 'growth', 'revenue', 'brand', 'strategy', 'lead'],
-      metaphors: [
-        'ascending geometric steps made of translucent glass catching golden light, each higher than the last',
-        'an abstract upward spiral of golden and dark metallic ribbons, suggesting momentum and growth',
-        'interlocking gears and arrows in a dynamic composition, precision and forward motion',
-      ],
-      palette: 'charcoal and deep black base, gold and amber accents, warm directional side lighting',
-    },
-    {
-      keywords: ['fitness', 'health', 'workout', 'nutrition', 'diet', 'exercise', 'strength', 'yoga', 'wellness', 'body', 'muscle', 'weight'],
-      metaphors: [
-        'abstract human form made of flowing energy lines and light particles, dynamic motion pose',
-        'bold geometric shapes suggesting power and movement, intersecting angular forms with kinetic energy',
-        'smooth organic curves and sharp angular contrasts representing the balance of strength and flexibility',
-      ],
-      palette: 'deep black base, vibrant orange and red energy accents, cool blue-white highlights',
-    },
-    {
-      keywords: ['art', 'design', 'creative', 'photo', 'draw', 'paint', 'illustration', 'graphic', 'visual', 'color', 'aesthetic', 'craft'],
-      metaphors: [
-        'cascading paint-like fluid dynamics in rich colors, frozen mid-splash against a dark void',
-        'abstract brushstrokes and geometric shapes layered with depth, a blend of order and creative chaos',
-        'a prism splitting a beam of light into vibrant spectral ribbons across a dark canvas',
-      ],
-      palette: 'deep matte black base, vivid magenta and violet accents, touches of warm gold',
-    },
-    {
-      keywords: ['cook', 'food', 'recipe', 'kitchen', 'baking', 'chef', 'cuisine', 'meal', 'restaurant'],
-      metaphors: [
-        'artfully arranged ingredients and kitchen tools as an overhead still life, dramatic shadows on dark surface',
-        'steam and warm light rising from a central focal point, rich textures and organic forms',
-        'elegant arrangement of fresh ingredients with dramatic chiaroscuro lighting, editorial food photography style',
-      ],
-      palette: 'warm dark brown and charcoal base, rich amber and copper tones, warm overhead lighting',
-    },
-    {
-      keywords: ['music', 'audio', 'sound', 'production', 'instrument', 'singing', 'beat', 'mix', 'song'],
-      metaphors: [
-        'abstract sound waves rippling outward in concentric patterns, transitioning from solid to translucent',
-        'flowing equalizer bars transforming into an organic landscape of peaks and valleys with subtle glow',
-        'musical notation symbols dissolving into abstract particle streams of light and rhythm',
-      ],
-      palette: 'deep indigo and black base, purple and magenta neon accents, cool white rim lighting',
-    },
-    {
-      keywords: ['writing', 'content', 'copy', 'blog', 'author', 'book', 'story', 'journal', 'publish'],
-      metaphors: [
-        'an open book with abstract light and ideas flowing upward from the pages into dark space',
-        'layered translucent pages floating in space with soft light passing through them',
-        'flowing ink ribbons forming elegant abstract patterns against a dark atmospheric background',
-      ],
-      palette: 'warm charcoal base, cream and ivory accents, soft warm directional light from above',
-    },
-    {
-      keywords: ['mindset', 'psychology', 'habit', 'productivity', 'personal', 'self', 'motivation', 'confidence', 'leadership', 'communication', 'relationship'],
-      metaphors: [
-        'a luminous abstract brain or neural network made of interconnected light points and flowing energy',
-        'concentric ripples expanding outward from a central glowing point, calm and purposeful energy',
-        'a pathway of light emerging from shadow, growing brighter and wider toward the viewer',
-      ],
-      palette: 'deep teal and dark slate base, warm gold and soft white accents, gentle volumetric light',
-    },
-  ]
-
-  // Match category or fall back to a versatile default
-  const matched = categories.find(cat => cat.keywords.some(kw => combined.includes(kw)))
-
-  const defaultMetaphors = [
-    'abstract geometric composition with interlocking translucent shapes, depth and dimension through layered glass-like forms',
-    'a bold central diamond or hexagonal prism refracting light into surrounding space, clean and architectural',
-    'smooth flowing ribbons of light weaving through dark space, creating a sense of forward motion and discovery',
-  ]
-  const defaultPalette = 'deep charcoal base, teal and electric blue accents, warm amber highlight points'
-
-  const metaphor = pick(matched?.metaphors ?? defaultMetaphors)
-  const palette = matched?.palette ?? defaultPalette
-
-  // Build a concise, natural-language prompt (under 100 words for best FLUX results)
-  const parts: string[] = [
-    `Professional editorial illustration for an online course about ${title}.`,
-    metaphor + '.',
-    `Dark background, high contrast, ${palette}.`,
-    `Dramatic directional lighting from the upper left creating depth and dimension.`,
-  ]
+  const parts: string[] = [scene]
 
   if (contentSummary) {
-    // Add a brief content hint — keep it short so the prompt stays focused
-    const shortSummary = contentSummary.split(',').slice(0, 4).join(',')
-    parts.push(`Visual elements should evoke: ${shortSummary}.`)
+    const shortSummary = contentSummary.split(',').slice(0, 3).join(',')
+    parts.push(`The scene should subtly relate to: ${shortSummary}.`)
+  }
+
+  if (includeTitle) {
+    // Recraft V3 is specifically good at rendering text in images
+    parts.push(`Large bold white text reading "${title.toUpperCase()}" prominently displayed in the lower third of the image. The text should be in a thick modern sans-serif font with a subtle dark shadow for contrast against the background.`)
+  } else {
+    parts.push('No text, no words, no letters in the image.')
   }
 
   if (custom.length > 0) {
-    parts.push(custom + '.')
+    parts.push(custom)
   }
 
-  parts.push('No text, no words, no letters, no watermarks, no people, no faces.')
-  parts.push('8K resolution, sharp details, clean composition, professional color grading.')
+  parts.push('16:9 widescreen format. No watermarks. Professional course thumbnail.')
 
   return parts.join(' ')
 }
+
+function getColors(title: string, contentSummary: string, audience: string): Array<{ r: number; g: number; b: number }> {
+  const combined = `${title} ${contentSummary} ${audience}`.toLowerCase()
+  const matched = TOPIC_STYLES.find(cat => cat.keywords.some(kw => combined.includes(kw)))
+  return matched?.colors ?? DEFAULT_COLORS
+}
+
+// ─── Route handler ───────────────────────────────────────────────────────────
 
 export async function POST(request: Request) {
   const supabase = createClient()
@@ -167,7 +197,7 @@ export async function POST(request: Request) {
     return Response.json({ error: 'Invalid request body' }, { status: 400 })
   }
 
-  const { courseId, customPrompt } = parsed.data
+  const { courseId, customPrompt, includeTitle } = parsed.data
   const safeCustomPrompt = (customPrompt ?? '').replace(/[\n\r]/g, ' ').slice(0, 500)
 
   const { data: course, error: fetchError } = await supabaseAdmin
@@ -192,7 +222,7 @@ export async function POST(request: Request) {
   const safeTitle = (course.title ?? '').replace(/[\n\r]/g, ' ').slice(0, 200)
   const safeAudience = (course.target_audience ?? '').replace(/[\n\r]/g, ' ').slice(0, 500)
 
-  // Build a content summary from generated_json so the image matches the actual course material
+  // Build content summary from generated_json
   let contentSummary = ''
   if (Array.isArray(course.generated_json)) {
     const modules = course.generated_json as Array<{ module_title?: string; lessons?: Array<{ lesson_title?: string }> }>
@@ -202,7 +232,6 @@ export async function POST(request: Request) {
       .slice(0, 12)
     contentSummary = topics.join(', ')
   }
-  // Fall back to description or raw_content snippet
   if (!contentSummary && course.description) {
     contentSummary = (course.description as string).replace(/[\n\r]/g, ' ').slice(0, 300)
   }
@@ -210,18 +239,19 @@ export async function POST(request: Request) {
     contentSummary = (course.raw_content as string).replace(/[\n\r]/g, ' ').slice(0, 300)
   }
 
-  const imagePrompt = buildImagePrompt(safeTitle, safeAudience, safeCustomPrompt, contentSummary)
+  const imagePrompt = buildPrompt(safeTitle, safeAudience, safeCustomPrompt, contentSummary, includeTitle ?? true)
+  const colors = getColors(safeTitle, contentSummary, safeAudience)
 
   try {
     const fal = getFal()
 
-    // Use FLUX Pro v1.1 for dramatically better quality over Schnell
-    const result = await fal.subscribe('fal-ai/flux-pro/v1.1', {
+    // Recraft V3 — best AI model for text rendering in images
+    const result = await fal.subscribe('fal-ai/recraft/v3/text-to-image', {
       input: {
         prompt: imagePrompt,
         image_size: 'landscape_16_9',
-        num_images: 1,
-        safety_tolerance: '2',
+        style: 'realistic_image',
+        colors,
       },
     })
 
@@ -229,19 +259,19 @@ export async function POST(request: Request) {
     const resultData = result as any
     const tempUrl = resultData?.data?.images?.[0]?.url ?? resultData?.images?.[0]?.url
     if (!tempUrl) {
-      console.error('[generate-cover-image] No image URL in fal response:', JSON.stringify(resultData).slice(0, 500))
+      console.error('[generate-cover-image] No image URL in response:', JSON.stringify(resultData).slice(0, 500))
       return Response.json({ error: 'Image generation failed' }, { status: 500 })
     }
 
-    // Download from temp fal.media URL (expires in hours)
+    // Download from temp URL (expires quickly)
     const imageResponse = await fetch(tempUrl)
     if (!imageResponse.ok) {
-      console.error('[generate-cover-image] Failed to download image from fal')
+      console.error('[generate-cover-image] Failed to download image')
       return Response.json({ error: 'Image download failed' }, { status: 500 })
     }
     const buffer = Buffer.from(await imageResponse.arrayBuffer())
 
-    // Upload with unique filename (no upsert — we keep history)
+    // Upload with unique filename
     const storagePath = `${user.id}/${courseId}/cover-${Date.now()}.jpg`
     const { error: uploadError } = await supabaseAdmin.storage
       .from('course-covers')
@@ -254,7 +284,7 @@ export async function POST(request: Request) {
       return Response.json({ error: 'Image upload failed' }, { status: 500 })
     }
 
-    // Get PUBLIC URL (not signed — course-covers bucket is public)
+    // Public URL (course-covers bucket is public)
     const { data: publicUrlData } = supabaseAdmin.storage
       .from('course-covers')
       .getPublicUrl(storagePath)
@@ -268,7 +298,6 @@ export async function POST(request: Request) {
 
     const newHistory = [...currentHistory, coverImageUrl]
 
-    // If over 5, delete oldest from storage and trim array
     if (newHistory.length > 5) {
       const toRemove = newHistory.shift()!
       try {
@@ -284,7 +313,6 @@ export async function POST(request: Request) {
       }
     }
 
-    // Update course record with new URL and history
     await supabaseAdmin
       .from('courses')
       .update({

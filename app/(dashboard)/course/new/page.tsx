@@ -7,10 +7,8 @@ import { z } from 'zod'
 import toast from 'react-hot-toast'
 import { Upload, X, Loader2, FileText, Globe, Youtube, Type } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
-import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
-import { Textarea } from '@/components/ui/textarea'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 
 const LANGUAGES = [
@@ -190,10 +188,19 @@ export default function NewCoursePage() {
     try {
       const supabase = createClient()
 
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        toast.error('Session expired. Please sign in again.')
+        router.push('/login')
+        return
+      }
+
       // Create course row
       const { data: course, error: insertError } = await supabase
         .from('courses')
         .insert({
+          user_id: user.id,
           title: title.trim(),
           target_audience: targetAudience.trim() || null,
           language,
@@ -310,12 +317,14 @@ export default function NewCoursePage() {
           <div className="space-y-6 animate-fade-up">
             <div className="space-y-2">
               <Label htmlFor="title">Course title</Label>
-              <Input
+              <input
                 id="title"
+                type="text"
                 placeholder="e.g. Launch Your First Skool Community"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 aria-describedby={errors.title ? 'title-error' : undefined}
+                className="h-11 w-full rounded-[6px] border border-[var(--border)] bg-transparent px-3 text-sm text-[var(--foreground)] outline-none focus:border-[var(--accent)] transition-colors duration-150 placeholder:text-[var(--muted-foreground)]"
               />
               {errors.title && (
                 <p id="title-error" className="text-sm text-red-500">
@@ -326,14 +335,16 @@ export default function NewCoursePage() {
 
             <div className="space-y-2">
               <Label htmlFor="target-audience">Target audience</Label>
-              <Input
+              <input
                 id="target-audience"
+                type="text"
                 placeholder="e.g. Coaches and consultants new to online courses"
                 value={targetAudience}
                 onChange={(e) => setTargetAudience(e.target.value)}
                 aria-describedby={
                   errors.targetAudience ? 'audience-error' : undefined
                 }
+                className="h-11 w-full rounded-[6px] border border-[var(--border)] bg-transparent px-3 text-sm text-[var(--foreground)] outline-none focus:border-[var(--accent)] transition-colors duration-150 placeholder:text-[var(--muted-foreground)]"
               />
               {errors.targetAudience && (
                 <p id="audience-error" className="text-sm text-red-500">
@@ -348,7 +359,7 @@ export default function NewCoursePage() {
                 id="language"
                 value={language}
                 onChange={(e) => setLanguage(e.target.value)}
-                className="h-8 w-full rounded-[6px] border border-[var(--input)] bg-transparent px-2.5 py-1 text-sm text-[var(--foreground)] outline-none transition-colors focus-visible:border-[var(--ring)] focus-visible:ring-3 focus-visible:ring-[var(--ring)]/50"
+                className="h-11 w-full rounded-[6px] border border-[var(--border)] bg-transparent px-3 text-sm text-[var(--foreground)] outline-none focus:border-[var(--accent)] transition-colors duration-150"
               >
                 {LANGUAGES.map((lang) => (
                   <option key={lang} value={lang} className="bg-[var(--card)]">
@@ -458,18 +469,19 @@ export default function NewCoursePage() {
                 <div className="space-y-2">
                   <Label htmlFor="youtube-url">YouTube video URL</Label>
                   <div className="flex gap-2">
-                    <Input
+                    <input
                       id="youtube-url"
+                      type="url"
                       placeholder="https://www.youtube.com/watch?v=..."
                       value={youtubeUrl}
                       onChange={(e) => setYoutubeUrl(e.target.value)}
-                      className="flex-1"
+                      className="flex-1 h-11 rounded-[6px] border border-[var(--border)] bg-transparent px-3 text-sm text-[var(--foreground)] outline-none focus:border-[var(--accent)] transition-colors duration-150 placeholder:text-[var(--muted-foreground)]"
                     />
                     <Button
                       onClick={handleExtractYoutube}
                       disabled={extractingYoutube}
                       variant="outline"
-                      className="shrink-0 rounded-[6px]"
+                      className="shrink-0 rounded-[6px] h-11"
                     >
                       {extractingYoutube ? (
                         <>
@@ -494,18 +506,19 @@ export default function NewCoursePage() {
                 <div className="space-y-2">
                   <Label htmlFor="website-url">Website URL</Label>
                   <div className="flex gap-2">
-                    <Input
+                    <input
                       id="website-url"
+                      type="url"
                       placeholder="https://example.com/article"
                       value={websiteUrl}
                       onChange={(e) => setWebsiteUrl(e.target.value)}
-                      className="flex-1"
+                      className="flex-1 h-11 rounded-[6px] border border-[var(--border)] bg-transparent px-3 text-sm text-[var(--foreground)] outline-none focus:border-[var(--accent)] transition-colors duration-150 placeholder:text-[var(--muted-foreground)]"
                     />
                     <Button
                       onClick={handleScrapeUrl}
                       disabled={scrapingUrl}
                       variant="outline"
-                      className="shrink-0 rounded-[6px]"
+                      className="shrink-0 rounded-[6px] h-11"
                     >
                       {scrapingUrl ? (
                         <>
@@ -528,12 +541,13 @@ export default function NewCoursePage() {
               {/* Paste Text Tab */}
               <TabsContent value="paste" className="mt-4 space-y-2">
                 <Label htmlFor="paste-text">Paste your content</Label>
-                <Textarea
+                <textarea
                   id="paste-text"
                   placeholder="Paste your notes, transcript, article, or any text content here..."
                   value={pasteText}
                   onChange={(e) => handlePasteChange(e.target.value)}
-                  className="min-h-[200px] resize-y"
+                  rows={10}
+                  className="w-full rounded-[6px] border border-[var(--border)] bg-transparent px-3 py-3 text-sm text-[var(--foreground)] outline-none focus:border-[var(--accent)] transition-colors duration-150 placeholder:text-[var(--muted-foreground)] resize-y"
                 />
                 <p className="text-xs text-[var(--muted-foreground)] text-right">
                   {pasteText.length.toLocaleString()} / 80,000 characters

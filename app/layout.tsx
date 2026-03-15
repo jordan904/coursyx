@@ -26,6 +26,10 @@ export const metadata: Metadata = {
   description:
     'Turn any PDF, YouTube video, URL, or text into a complete Skool Classroom with modules, quizzes, video scripts, and cover images — ready to paste in under two minutes.',
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'),
+  icons: {
+    icon: '/logo.jpg',
+    apple: '/logo.jpg',
+  },
   openGraph: {
     title: 'Coursyx — AI Course Builder for Skool',
     description:

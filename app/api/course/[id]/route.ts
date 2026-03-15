@@ -12,6 +12,7 @@ const patchSchema = z.object({
   generated_json: z.any().optional(),
   outline_json: z.any().optional(),
   cover_image_url: z.string().url().nullable().optional(),
+  cover_image_history: z.array(z.string().url()).max(5).optional(),
 })
 
 function isValidUUID(id: string): boolean {

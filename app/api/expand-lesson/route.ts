@@ -15,7 +15,7 @@ const redis = new Redis({
 
 const ratelimit = new Ratelimit({
   redis,
-  limiter: Ratelimit.slidingWindow(20, '1 h'),
+  limiter: Ratelimit.slidingWindow(50, '1 h'),
   prefix: 'ratelimit:expand-lesson',
 })
 
@@ -85,7 +85,7 @@ export async function POST(request: Request) {
   const safeBody = lessonBody.replace(/[\n\r]/g, ' ').slice(0, 3000)
 
   const result = streamText({
-    model: anthropic('claude-sonnet-4-6'),
+    model: anthropic('claude-sonnet-4-20250514'),
     messages: [
       { role: 'system', content: EXPAND_SYSTEM_PROMPT },
       { role: 'user', content: safeBody },
