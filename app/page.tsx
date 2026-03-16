@@ -110,11 +110,12 @@ export default function LandingPage() {
       <div className="max-w-md mx-auto px-6 pb-24">
         <div className="animate-fade-up" style={{ animationDelay: '600ms' }}>
           <video
-            src="/demo.mov"
+            src="/demo.mp4"
             autoPlay
             loop
             muted
             playsInline
+            preload="metadata"
             className="w-full max-h-[70vh] object-contain rounded-[6px] border border-[var(--border)]"
           />
           <div className="mt-4 text-center">
