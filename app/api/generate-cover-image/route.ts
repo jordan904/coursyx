@@ -219,6 +219,17 @@ export async function POST(request: Request) {
     return Response.json({ error: "You've hit the limit. Try again in an hour." }, { status: 429 })
   }
 
+  // Lifetime limit: 5 cover images per course
+  const currentHistory: string[] = Array.isArray(course.cover_image_history)
+    ? course.cover_image_history
+    : []
+  if (currentHistory.length >= 5) {
+    return Response.json(
+      { error: 'You have reached the maximum of 5 cover images for this course.' },
+      { status: 403 }
+    )
+  }
+
   const safeTitle = (course.title ?? '').replace(/[\n\r]/g, ' ').slice(0, 200)
   const safeAudience = (course.target_audience ?? '').replace(/[\n\r]/g, ' ').slice(0, 500)
 
@@ -291,27 +302,8 @@ export async function POST(request: Request) {
 
     const coverImageUrl = publicUrlData.publicUrl
 
-    // Manage cover image history (max 5)
-    const currentHistory: string[] = Array.isArray(course.cover_image_history)
-      ? course.cover_image_history
-      : []
-
+    // Append to cover image history
     const newHistory = [...currentHistory, coverImageUrl]
-
-    if (newHistory.length > 5) {
-      const toRemove = newHistory.shift()!
-      try {
-        const urlObj = new URL(toRemove)
-        const pathMatch = urlObj.pathname.match(/\/course-covers\/(.+)$/)
-        if (pathMatch) {
-          await supabaseAdmin.storage
-            .from('course-covers')
-            .remove([decodeURIComponent(pathMatch[1])])
-        }
-      } catch (err) {
-        console.error('[generate-cover-image] Failed to delete old image:', err)
-      }
-    }
 
     await supabaseAdmin
       .from('courses')

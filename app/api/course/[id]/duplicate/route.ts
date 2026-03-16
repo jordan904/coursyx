@@ -38,6 +38,19 @@ export async function POST(
     return Response.json({ error: 'Forbidden' }, { status: 403 })
   }
 
+  // Check course limit (2 per free user)
+  const { count } = await supabaseAdmin
+    .from('courses')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', user.id)
+
+  if (count !== null && count >= 2) {
+    return Response.json(
+      { error: 'You have reached the maximum of 2 courses. Contact us to request more.' },
+      { status: 403 }
+    )
+  }
+
   // Insert duplicate with reset fields
   const { data: newCourse, error: insertError } = await supabaseAdmin
     .from('courses')

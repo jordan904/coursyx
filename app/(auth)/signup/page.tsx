@@ -17,10 +17,44 @@ const signupSchema = z.object({
 
 export default function SignupPage() {
   const router = useRouter()
+  const [inviteCode, setInviteCode] = useState('')
+  const [codeVerified, setCodeVerified] = useState(false)
+  const [codeError, setCodeError] = useState('')
+  const [verifying, setVerifying] = useState(false)
+
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(false)
+
+  const handleVerifyCode = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setCodeError('')
+    if (!inviteCode.trim()) {
+      setCodeError('Please enter an invite code.')
+      return
+    }
+    setVerifying(true)
+    try {
+      const res = await fetch('/api/verify-invite-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: inviteCode.trim() }),
+      })
+      const data = await res.json()
+      if (data.valid) {
+        setCodeVerified(true)
+      } else {
+        setCodeError(data.error || 'Invalid invite code.')
+      }
+    } catch {
+      setCodeError('Connection error. Please try again.')
+    } finally {
+      setVerifying(false)
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -37,17 +71,98 @@ export default function SignupPage() {
       return
     }
 
-    setLoading(true)
-    const supabase = createClient()
-    const { error } = await supabase.auth.signUp({ email, password })
-
-    if (error) {
-      setErrors({ form: error.message })
-      setLoading(false)
+    if (password !== confirmPassword) {
+      setErrors({ confirmPassword: 'Passwords do not match.' })
       return
     }
 
-    router.push('/course/new')
+    setLoading(true)
+    try {
+      const res = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email,
+          password,
+          invite_code: inviteCode.trim(),
+        }),
+      })
+      const data = await res.json()
+
+      if (!res.ok || !data.success) {
+        setErrors({ form: data.error || 'Could not create account.' })
+        setLoading(false)
+        return
+      }
+
+      // Sign in the newly created user
+      const supabase = createClient()
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
+
+      if (signInError) {
+        setErrors({ form: 'Account created. Please sign in manually.' })
+        setLoading(false)
+        return
+      }
+
+      router.push('/course/new')
+    } catch {
+      setErrors({ form: 'Connection error. Please try again.' })
+      setLoading(false)
+    }
+  }
+
+  // Gate: show code entry first
+  if (!codeVerified) {
+    return (
+      <main className="min-h-screen flex items-center justify-center px-4">
+        <div className="w-full max-w-sm space-y-6">
+          <div className="text-center">
+            <Image src="/logo.jpg" alt="Coursyx" width={64} height={64} className="size-16 mx-auto mb-4" />
+            <h1 className="font-heading text-4xl mb-2">Enter invite code</h1>
+            <p className="text-sm text-[var(--muted-foreground)]">
+              You need an invite code to create an account
+            </p>
+          </div>
+
+          <form onSubmit={handleVerifyCode} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="invite-code">Invite Code</Label>
+              <Input
+                id="invite-code"
+                type="text"
+                placeholder="Enter your code"
+                value={inviteCode}
+                onChange={(e) => setInviteCode(e.target.value)}
+                autoFocus
+                aria-describedby={codeError ? 'code-error' : undefined}
+              />
+              {codeError && (
+                <p id="code-error" className="text-sm text-red-500">{codeError}</p>
+              )}
+            </div>
+
+            <Button
+              type="submit"
+              disabled={verifying}
+              className="w-full bg-[var(--accent)] hover:bg-[var(--accent)]/90 text-white rounded-[6px]"
+            >
+              {verifying ? 'Verifying...' : 'Continue'}
+            </Button>
+          </form>
+
+          <p className="text-center text-sm text-[var(--muted-foreground)]">
+            Already have an account?{' '}
+            <Link href="/login" className="text-[var(--accent)] hover:underline">
+              Sign in
+            </Link>
+          </p>
+        </div>
+      </main>
+    )
   }
 
   return (
@@ -79,16 +194,46 @@ export default function SignupPage() {
 
           <div className="space-y-2">
             <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              type="password"
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              aria-describedby={errors.password ? 'password-error' : undefined}
-            />
+            <div className="relative">
+              <Input
+                id="password"
+                type={showPassword ? 'text' : 'password'}
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                aria-describedby={errors.password ? 'password-error' : undefined}
+                className="pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors duration-150"
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+              >
+                {showPassword ? (
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                ) : (
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                )}
+              </button>
+            </div>
             {errors.password && (
               <p id="password-error" className="text-sm text-red-500">{errors.password}</p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="confirm-password">Confirm Password</Label>
+            <Input
+              id="confirm-password"
+              type={showPassword ? 'text' : 'password'}
+              placeholder="••••••••"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              aria-describedby={errors.confirmPassword ? 'confirm-password-error' : undefined}
+            />
+            {errors.confirmPassword && (
+              <p id="confirm-password-error" className="text-sm text-red-500">{errors.confirmPassword}</p>
             )}
           </div>
 

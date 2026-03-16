@@ -196,6 +196,18 @@ export default function NewCoursePage() {
         return
       }
 
+      // Check course limit (2 per free user)
+      const { count } = await supabase
+        .from('courses')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+
+      if (count !== null && count >= 2) {
+        toast.error('You have reached the maximum of 2 courses. Contact us to request more.')
+        setGenerating(false)
+        return
+      }
+
       // Create course row
       const { data: course, error: insertError } = await supabase
         .from('courses')

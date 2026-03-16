@@ -36,6 +36,18 @@ export async function POST(request: Request) {
     return Response.json({ error: 'Not found' }, { status: 404 })
   }
 
+  // Ownership check
+  const { data: course } = await supabase
+    .from('courses')
+    .select('id')
+    .eq('id', courseId)
+    .eq('user_id', user.id)
+    .single()
+
+  if (!course) {
+    return Response.json({ error: 'Not found' }, { status: 403 })
+  }
+
   // Server-side size check
   const buffer = Buffer.from(await file.arrayBuffer())
   if (buffer.byteLength > 10 * 1024 * 1024) {

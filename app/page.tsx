@@ -69,13 +69,19 @@ export default function LandingPage() {
               className="animate-fade-up space-y-3"
               style={{ animationDelay: '160ms' }}
             >
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 flex-wrap">
                 <button
                   onClick={() => setShowForm(true)}
                   className="inline-flex items-center justify-center h-12 px-8 bg-[var(--accent)] text-white font-medium rounded-[6px] hover:opacity-90 transition-opacity duration-150"
                 >
                   Request Trial Access
                 </button>
+                <a
+                  href="/signup"
+                  className="inline-flex items-center justify-center h-12 px-6 border border-[var(--accent)] text-[var(--accent)] font-medium rounded-[6px] hover:bg-[var(--accent)] hover:text-white transition-colors duration-150"
+                >
+                  Sign Up with Code
+                </a>
                 <a
                   href="/login"
                   className="inline-flex items-center justify-center h-12 px-6 border border-[var(--border)] text-[var(--foreground)] font-medium rounded-[6px] hover:bg-[var(--card)] transition-colors duration-150"
