@@ -43,7 +43,11 @@
   }
 
   html {
-    @apply font-sans;
+    @apply font-sans overflow-x-hidden;
+  }
+
+  body {
+    @apply overflow-x-hidden;
   }
 }
 

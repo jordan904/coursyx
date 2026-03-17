@@ -1627,13 +1627,13 @@ export function CourseEditor({ course }: { course: Course }) {
 
       {/* ─── Script Modal ──────────────────────────────────────────────────── */}
       <Dialog open={scriptModalOpen} onOpenChange={setScriptModalOpen}>
-        <DialogContent className="sm:max-w-lg bg-[#161A1F] border border-[#2A2E35]">
+        <DialogContent className="sm:max-w-lg bg-[#161A1F] border-0 sm:border sm:border-[#2A2E35]">
           <DialogHeader>
             <DialogTitle className="font-heading text-[#E8E3D5]">
               Video Script
             </DialogTitle>
           </DialogHeader>
-          <div className="max-h-[60vh] overflow-y-auto">
+          <div className="flex-1 overflow-y-auto sm:max-h-[60vh]">
             <pre className="whitespace-pre-wrap text-sm text-[#E8E3D5] leading-relaxed">
               {activeScript}
             </pre>
@@ -1688,13 +1688,13 @@ export function CourseEditor({ course }: { course: Course }) {
 
       {/* ─── Quiz Modal ────────────────────────────────────────────────────── */}
       <Dialog open={quizModalOpen} onOpenChange={setQuizModalOpen}>
-        <DialogContent className="sm:max-w-lg bg-[#161A1F] border border-[#2A2E35]">
+        <DialogContent className="sm:max-w-lg bg-[#161A1F] border-0 sm:border sm:border-[#2A2E35]">
           <DialogHeader>
             <DialogTitle className="font-heading text-[#E8E3D5]">
               Module Quiz
             </DialogTitle>
           </DialogHeader>
-          <div className="max-h-[60vh] overflow-y-auto space-y-4">
+          <div className="flex-1 overflow-y-auto sm:max-h-[60vh] space-y-4">
             {activeQuiz?.map((q, qIdx) => (
               <div
                 key={qIdx}
@@ -1774,13 +1774,13 @@ export function CourseEditor({ course }: { course: Course }) {
 
       {/* ─── Discussion Post Modal ─────────────────────────────────────────── */}
       <Dialog open={postModalOpen} onOpenChange={setPostModalOpen}>
-        <DialogContent className="sm:max-w-lg bg-[#161A1F] border border-[#2A2E35]">
+        <DialogContent className="sm:max-w-lg bg-[#161A1F] border-0 sm:border sm:border-[#2A2E35]">
           <DialogHeader>
             <DialogTitle className="font-heading text-[#E8E3D5]">
               Discussion Post
             </DialogTitle>
           </DialogHeader>
-          <div className="max-h-[60vh] overflow-y-auto">
+          <div className="flex-1 overflow-y-auto sm:max-h-[60vh]">
             <p className="text-sm text-[#E8E3D5] leading-relaxed whitespace-pre-wrap">
               {activePost}
             </p>

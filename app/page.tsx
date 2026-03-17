@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import Image from 'next/image'
 import toast from 'react-hot-toast'
 
@@ -17,6 +17,18 @@ export default function LandingPage() {
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [form, setForm] = useState({ name: '', email: '', phone: '', community: '', niche: '' })
+  const videoRef = useRef<HTMLVideoElement>(null)
+
+  useEffect(() => {
+    // iOS Safari requires muted to be set via DOM property for autoplay
+    const video = videoRef.current
+    if (video) {
+      video.muted = true
+      video.setAttribute('playsinline', '')
+      video.setAttribute('webkit-playsinline', '')
+      video.play().catch(() => {})
+    }
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -116,12 +128,13 @@ export default function LandingPage() {
       <div className="max-w-md mx-auto px-6 pb-24">
         <div className="animate-fade-up" style={{ animationDelay: '600ms' }}>
           <video
+            ref={videoRef}
             src="/demo.mp4"
             autoPlay
             loop
             muted
             playsInline
-            preload="metadata"
+            preload="auto"
             className="w-full max-h-[70vh] object-contain rounded-[6px] border border-[var(--border)]"
           />
           <div className="mt-4 text-center">

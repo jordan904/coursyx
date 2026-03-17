@@ -50,6 +50,10 @@ export async function GET(
     return Response.json({ error: 'Forbidden' }, { status: 403 })
   }
 
+  if (course.deleted_at) {
+    return Response.json({ error: 'Not found' }, { status: 404 })
+  }
+
   return Response.json(course)
 }
 
@@ -168,9 +172,10 @@ export async function DELETE(
     // Continue with course deletion even if storage cleanup fails
   }
 
+  // Soft-delete: mark as deleted so it still counts toward lifetime limit
   const { error } = await supabaseAdmin
     .from('courses')
-    .delete()
+    .update({ deleted_at: new Date().toISOString() })
     .eq('id', id)
 
   if (error) {
