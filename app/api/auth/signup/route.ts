@@ -2,6 +2,7 @@ import { supabaseAdmin } from '@/lib/supabase/admin'
 import { z } from 'zod'
 import { Ratelimit } from '@upstash/ratelimit'
 import { Redis } from '@upstash/redis'
+import { sendWelcomeEmail, sendSignupNotification } from '@/lib/email'
 
 const redis = new Redis({
   url: process.env.UPSTASH_REDIS_REST_URL!,
@@ -86,6 +87,10 @@ export async function POST(request: Request) {
       })
       .eq('code', invite_code)
   }
+
+  // Send emails in background. Don't block the signup response.
+  sendWelcomeEmail(email).catch(() => {})
+  sendSignupNotification(email).catch(() => {})
 
   return Response.json({ success: true })
 }
