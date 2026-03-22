@@ -93,6 +93,7 @@ type Course = {
   language: string | null
   cover_image_url: string | null
   cover_image_history: string[] | null
+  cover_image_count: number
   generated_json: Module[] | null
   status: string
 }
@@ -232,6 +233,7 @@ export function CourseEditor({ course }: { course: Course }) {
   const [coverHistory, setCoverHistory] = useState<string[]>(
     () => (course.cover_image_history as string[]) ?? []
   )
+  const [coverImageCount, setCoverImageCount] = useState(course.cover_image_count ?? 0)
   const [coverPrompt, setCoverPrompt] = useState('')
   const [enrichmentExpanded, setEnrichmentExpanded] = useState(false)
 
@@ -555,6 +557,9 @@ export function CourseEditor({ course }: { course: Course }) {
       setCoverImageUrl(data.coverImageUrl)
       if (data.coverImageHistory) {
         setCoverHistory(data.coverImageHistory)
+      }
+      if (data.coverImageCount !== undefined) {
+        setCoverImageCount(data.coverImageCount)
       }
       toast.success('Cover image generated!')
     } catch {
@@ -1100,11 +1105,13 @@ export function CourseEditor({ course }: { course: Course }) {
         <div className="flex gap-2 mb-2">
           <Button
             onClick={handleGenerateCoverImage}
-            disabled={generatingImage}
+            disabled={generatingImage || coverImageCount >= 3}
             variant="outline"
-            className="flex-1 rounded-[6px] text-xs"
+            className={`flex-1 rounded-[6px] text-xs${coverImageCount >= 3 ? ' opacity-50' : ''}`}
           >
-            {generatingImage ? (
+            {coverImageCount >= 3 ? (
+              '3/3 — Limit reached'
+            ) : generatingImage ? (
               <>
                 <Loader2 className="size-3 animate-spin mr-1" />
                 Generating...
@@ -1136,7 +1143,7 @@ export function CourseEditor({ course }: { course: Course }) {
         {coverHistory.length > 1 && (
           <div className="mt-2">
             <p className="text-[10px] text-[#8A8F98] mb-1">
-              {coverHistory.length}/5 images
+              {coverImageCount}/3 images used
             </p>
             <div className="flex gap-1.5 overflow-x-auto">
               {coverHistory.map((url, idx) => (

@@ -1,18 +1,36 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { LogOut, Plus, HelpCircle } from 'lucide-react'
+import { LogOut, Plus, HelpCircle, CreditCard } from 'lucide-react'
 import toast from 'react-hot-toast'
+
+type UsageData = {
+  plan: string
+  monthlyUsed: number
+  monthlyLimit: number
+  lifetimeUsed: number
+  lifetimeLimit: number
+  credits: number
+} | null
 
 export function DashboardHeader() {
   const router = useRouter()
   const [showHelp, setShowHelp] = useState(false)
   const [helpForm, setHelpForm] = useState({ subject: '', message: '', email: '' })
   const [submitting, setSubmitting] = useState(false)
+  const [usage, setUsage] = useState<UsageData>(null)
+  const [portalLoading, setPortalLoading] = useState(false)
+
+  useEffect(() => {
+    fetch('/api/billing/usage')
+      .then(res => res.ok ? res.json() : null)
+      .then(data => { if (data) setUsage(data) })
+      .catch(() => {})
+  }, [])
 
   const handleSignOut = async () => {
     await fetch('/api/auth/signout', { method: 'POST' })
@@ -60,6 +78,48 @@ export function DashboardHeader() {
           </Link>
 
           <div className="flex items-center gap-3">
+            {usage && (
+              <div className="hidden sm:flex items-center gap-2 text-xs text-[var(--muted-foreground)]">
+                <span>
+                  {usage.plan === 'free'
+                    ? `${usage.lifetimeUsed}/${usage.lifetimeLimit} courses`
+                    : `${usage.monthlyUsed}/${usage.monthlyLimit} this month`}
+                  {usage.credits > 0 && ` + ${usage.credits} credits`}
+                </span>
+                {usage.plan === 'free' && usage.lifetimeUsed >= usage.lifetimeLimit && (
+                  <Link href="#" className="text-[var(--accent)] font-medium hover:underline">
+                    Upgrade
+                  </Link>
+                )}
+              </div>
+            )}
+
+            {usage && usage.plan !== 'free' && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={async () => {
+                  setPortalLoading(true)
+                  try {
+                    const res = await fetch('/api/billing/portal', { method: 'POST' })
+                    const data = await res.json()
+                    if (data.url) window.location.href = data.url
+                    else toast.error('Could not open billing portal.')
+                  } catch {
+                    toast.error('Connection error.')
+                  } finally {
+                    setPortalLoading(false)
+                  }
+                }}
+                disabled={portalLoading}
+                aria-label="Manage Billing"
+                className="text-muted-foreground hover:text-foreground"
+                style={{ transitionDuration: '150ms' }}
+              >
+                <CreditCard className="size-4" />
+              </Button>
+            )}
+
             <Link href="/course/new">
               <Button
                 className="rounded-[6px] bg-accent text-white hover:bg-accent/90"
