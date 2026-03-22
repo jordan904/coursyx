@@ -17,10 +17,6 @@ const signupSchema = z.object({
 
 export default function SignupPage() {
   const router = useRouter()
-  const [inviteCode, setInviteCode] = useState('')
-  const [codeVerified, setCodeVerified] = useState(false)
-  const [codeError, setCodeError] = useState('')
-  const [verifying, setVerifying] = useState(false)
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -28,33 +24,6 @@ export default function SignupPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(false)
-
-  const handleVerifyCode = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setCodeError('')
-    if (!inviteCode.trim()) {
-      setCodeError('Please enter an invite code.')
-      return
-    }
-    setVerifying(true)
-    try {
-      const res = await fetch('/api/verify-invite-code', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code: inviteCode.trim() }),
-      })
-      const data = await res.json()
-      if (data.valid) {
-        setCodeVerified(true)
-      } else {
-        setCodeError(data.error || 'Invalid invite code.')
-      }
-    } catch {
-      setCodeError('Connection error. Please try again.')
-    } finally {
-      setVerifying(false)
-    }
-  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -81,11 +50,7 @@ export default function SignupPage() {
       const res = await fetch('/api/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email,
-          password,
-          invite_code: inviteCode.trim(),
-        }),
+        body: JSON.stringify({ email, password }),
       })
       const data = await res.json()
 
@@ -115,56 +80,6 @@ export default function SignupPage() {
     }
   }
 
-  // Gate: show code entry first
-  if (!codeVerified) {
-    return (
-      <main className="min-h-screen flex items-center justify-center px-4">
-        <div className="w-full max-w-sm space-y-6">
-          <div className="text-center">
-            <Image src="/logo.jpg" alt="Coursyx" width={64} height={64} className="size-16 mx-auto mb-4" />
-            <h1 className="font-heading text-4xl mb-2">Enter invite code</h1>
-            <p className="text-sm text-[var(--muted-foreground)]">
-              You need an invite code to create an account
-            </p>
-          </div>
-
-          <form onSubmit={handleVerifyCode} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="invite-code">Invite Code</Label>
-              <Input
-                id="invite-code"
-                type="text"
-                placeholder="Enter your code"
-                value={inviteCode}
-                onChange={(e) => setInviteCode(e.target.value)}
-                autoFocus
-                aria-describedby={codeError ? 'code-error' : undefined}
-              />
-              {codeError && (
-                <p id="code-error" className="text-sm text-red-500">{codeError}</p>
-              )}
-            </div>
-
-            <Button
-              type="submit"
-              disabled={verifying}
-              className="w-full bg-[var(--accent)] hover:bg-[var(--accent)]/90 text-white rounded-[6px]"
-            >
-              {verifying ? 'Verifying...' : 'Continue'}
-            </Button>
-          </form>
-
-          <p className="text-center text-sm text-[var(--muted-foreground)]">
-            Already have an account?{' '}
-            <Link href="/login" className="text-[var(--accent)] hover:underline">
-              Sign in
-            </Link>
-          </p>
-        </div>
-      </main>
-    )
-  }
-
   return (
     <main className="min-h-screen flex items-center justify-center px-4">
       <div className="w-full max-w-sm space-y-6">
@@ -172,7 +87,7 @@ export default function SignupPage() {
           <Image src="/logo.jpg" alt="Coursyx" width={64} height={64} className="size-16 mx-auto mb-4" />
           <h1 className="font-heading text-4xl mb-2">Create your account</h1>
           <p className="text-sm text-[var(--muted-foreground)]">
-            Start building your first Skool course
+            Start building your first Skool course — free
           </p>
         </div>
 
@@ -185,6 +100,7 @@ export default function SignupPage() {
               placeholder="you@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              autoFocus
               aria-describedby={errors.email ? 'email-error' : undefined}
             />
             {errors.email && (

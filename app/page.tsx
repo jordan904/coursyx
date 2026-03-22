@@ -2,7 +2,6 @@
 
 import { useState, useRef, useEffect } from 'react'
 import Image from 'next/image'
-import toast from 'react-hot-toast'
 
 const features = [
   { title: 'Upload anything', description: 'PDFs, YouTube links, URLs, or paste your notes directly.' },
@@ -13,10 +12,6 @@ const features = [
 ]
 
 export default function LandingPage() {
-  const [showForm, setShowForm] = useState(false)
-  const [submitting, setSubmitting] = useState(false)
-  const [submitted, setSubmitted] = useState(false)
-  const [form, setForm] = useState({ name: '', email: '', phone: '', community: '', niche: '' })
   const [annual, setAnnual] = useState(false)
   const videoRef = useRef<HTMLVideoElement>(null)
 
@@ -30,32 +25,6 @@ export default function LandingPage() {
       video.play().catch(() => {})
     }
   }, [])
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!form.name.trim() || !form.email.trim() || !form.phone.trim()) {
-      toast.error('Please fill in all required fields.')
-      return
-    }
-    setSubmitting(true)
-    try {
-      const res = await fetch('https://formspree.io/f/mbdzkgrb', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-        body: JSON.stringify(form),
-      })
-      if (!res.ok) {
-        toast.error('Something went wrong. Please try again.')
-        return
-      }
-      setSubmitted(true)
-      toast.success('Request submitted!')
-    } catch {
-      toast.error('Connection error. Please try again.')
-    } finally {
-      setSubmitting(false)
-    }
-  }
 
   return (
     <main className="min-h-screen bg-[var(--background)]">
@@ -83,17 +52,11 @@ export default function LandingPage() {
               style={{ animationDelay: '160ms' }}
             >
               <div className="flex items-center gap-3 flex-wrap">
-                <button
-                  onClick={() => setShowForm(true)}
-                  className="inline-flex items-center justify-center h-12 px-8 bg-[var(--accent)] text-white font-medium rounded-[6px] hover:opacity-90 transition-opacity duration-150"
-                >
-                  Request Trial Access
-                </button>
                 <a
                   href="/signup"
-                  className="inline-flex items-center justify-center h-12 px-6 border border-[var(--accent)] text-[var(--accent)] font-medium rounded-[6px] hover:bg-[var(--accent)] hover:text-white transition-colors duration-150"
+                  className="inline-flex items-center justify-center h-12 px-8 bg-[var(--accent)] text-white font-medium rounded-[6px] hover:opacity-90 transition-opacity duration-150"
                 >
-                  Sign Up with Code
+                  Start Free
                 </a>
                 <a
                   href="/login"
@@ -103,7 +66,7 @@ export default function LandingPage() {
                 </a>
               </div>
               <p className="text-sm text-[var(--muted-foreground)] max-w-md">
-                We are in the testing phase and are accepting a limited number of Skool creators to trial the software in exchange for feedback.
+                Free plan includes 2 courses with all features. No credit card required.
               </p>
             </div>
           </div>
@@ -335,106 +298,6 @@ export default function LandingPage() {
         </div>
       </div>
 
-      {/* Trial access form modal */}
-      {showForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div
-            className="absolute inset-0 bg-black/60"
-            onClick={() => !submitting && setShowForm(false)}
-          />
-          <div className="relative w-full max-w-md bg-[var(--card)] border border-[var(--border)] rounded-[6px] p-6">
-            {submitted ? (
-              <div className="text-center py-8">
-                <h2 className="font-heading text-2xl mb-2">You&apos;re on the list</h2>
-                <p className="text-[var(--muted-foreground)] text-sm mb-6">
-                  We&apos;ll be in touch soon with your trial access details.
-                </p>
-                <button
-                  onClick={() => setShowForm(false)}
-                  className="inline-flex items-center justify-center h-10 px-6 bg-[var(--accent)] text-white font-medium rounded-[6px] hover:opacity-90 transition-opacity duration-150 text-sm"
-                >
-                  Close
-                </button>
-              </div>
-            ) : (
-              <>
-                <div className="flex items-center justify-between mb-5">
-                  <h2 className="font-heading text-xl">Request Trial Access</h2>
-                  <button
-                    onClick={() => setShowForm(false)}
-                    className="text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors duration-150 text-lg leading-none"
-                    aria-label="Close"
-                  >
-                    &times;
-                  </button>
-                </div>
-                <form onSubmit={handleSubmit} className="space-y-3">
-                  <div>
-                    <label className="block text-xs text-[var(--muted-foreground)] mb-1">Name *</label>
-                    <input
-                      type="text"
-                      required
-                      value={form.name}
-                      onChange={(e) => setForm({ ...form, name: e.target.value })}
-                      className="w-full px-3 py-2 bg-[var(--background)] border border-[var(--border)] rounded-[6px] text-[var(--foreground)] text-sm outline-none focus:border-[var(--accent)] transition-colors duration-150"
-                      placeholder="Your name"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-[var(--muted-foreground)] mb-1">Email *</label>
-                    <input
-                      type="email"
-                      required
-                      value={form.email}
-                      onChange={(e) => setForm({ ...form, email: e.target.value })}
-                      className="w-full px-3 py-2 bg-[var(--background)] border border-[var(--border)] rounded-[6px] text-[var(--foreground)] text-sm outline-none focus:border-[var(--accent)] transition-colors duration-150"
-                      placeholder="you@email.com"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-[var(--muted-foreground)] mb-1">Phone *</label>
-                    <input
-                      type="tel"
-                      required
-                      value={form.phone}
-                      onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                      className="w-full px-3 py-2 bg-[var(--background)] border border-[var(--border)] rounded-[6px] text-[var(--foreground)] text-sm outline-none focus:border-[var(--accent)] transition-colors duration-150"
-                      placeholder="Your phone number"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-[var(--muted-foreground)] mb-1">Skool community name <span className="text-[var(--muted)]">(optional)</span></label>
-                    <input
-                      type="text"
-                      value={form.community}
-                      onChange={(e) => setForm({ ...form, community: e.target.value })}
-                      className="w-full px-3 py-2 bg-[var(--background)] border border-[var(--border)] rounded-[6px] text-[var(--foreground)] text-sm outline-none focus:border-[var(--accent)] transition-colors duration-150"
-                      placeholder="e.g. The Fitness Academy"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-[var(--muted-foreground)] mb-1">Your niche <span className="text-[var(--muted)]">(optional)</span></label>
-                    <input
-                      type="text"
-                      value={form.niche}
-                      onChange={(e) => setForm({ ...form, niche: e.target.value })}
-                      className="w-full px-3 py-2 bg-[var(--background)] border border-[var(--border)] rounded-[6px] text-[var(--foreground)] text-sm outline-none focus:border-[var(--accent)] transition-colors duration-150"
-                      placeholder="e.g. Fitness, marketing, real estate..."
-                    />
-                  </div>
-                  <button
-                    type="submit"
-                    disabled={submitting}
-                    className="w-full h-10 mt-2 bg-[var(--accent)] text-white font-medium rounded-[6px] hover:opacity-90 transition-opacity duration-150 text-sm disabled:opacity-50"
-                  >
-                    {submitting ? 'Submitting...' : 'Submit Request'}
-                  </button>
-                </form>
-              </>
-            )}
-          </div>
-        </div>
-      )}
     </main>
   )
 }

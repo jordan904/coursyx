@@ -17,7 +17,7 @@ const ratelimit = new Ratelimit({
 const signupSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8),
-  invite_code: z.string().min(1),
+  invite_code: z.string().min(1).optional(),
 })
 
 export async function POST(request: Request) {
@@ -42,19 +42,21 @@ export async function POST(request: Request) {
     return Response.json({ error: 'Too many attempts. Please try again later.' }, { status: 429 })
   }
 
-  // Verify invite code exists and is unused
-  const { data: code, error: codeError } = await supabaseAdmin
-    .from('invite_codes')
-    .select('id, used')
-    .eq('code', invite_code)
-    .single()
+  // Verify invite code if provided
+  if (invite_code) {
+    const { data: code, error: codeError } = await supabaseAdmin
+      .from('invite_codes')
+      .select('id, used')
+      .eq('code', invite_code)
+      .single()
 
-  if (codeError || !code) {
-    return Response.json({ error: 'Invalid invite code.' }, { status: 403 })
-  }
+    if (codeError || !code) {
+      return Response.json({ error: 'Invalid invite code.' }, { status: 403 })
+    }
 
-  if (code.used) {
-    return Response.json({ error: 'This invite code has already been used.' }, { status: 403 })
+    if (code.used) {
+      return Response.json({ error: 'This invite code has already been used.' }, { status: 403 })
+    }
   }
 
   // Create the user via admin API
@@ -73,15 +75,17 @@ export async function POST(request: Request) {
     return Response.json({ error: 'Could not create account. Please try again.' }, { status: 500 })
   }
 
-  // Mark the invite code as used
-  await supabaseAdmin
-    .from('invite_codes')
-    .update({
-      used: true,
-      used_by: userData.user.id,
-      used_at: new Date().toISOString(),
-    })
-    .eq('id', code.id)
+  // Mark the invite code as used (if one was provided)
+  if (invite_code) {
+    await supabaseAdmin
+      .from('invite_codes')
+      .update({
+        used: true,
+        used_by: userData.user.id,
+        used_at: new Date().toISOString(),
+      })
+      .eq('code', invite_code)
+  }
 
   return Response.json({ success: true })
 }
