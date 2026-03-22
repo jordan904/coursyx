@@ -114,9 +114,14 @@ export function CourseCard({
     }
   }
 
-  const editHref = stuck
-    ? `/course/${course.id}/generating`
-    : `/course/${course.id}`
+  const editHref = (() => {
+    if (stuck) return `/course/${course.id}/generating`
+    switch (course.status) {
+      case 'outline': return `/course/${course.id}/outline`
+      case 'generating': return `/course/${course.id}/generating`
+      default: return `/course/${course.id}`
+    }
+  })()
 
   return (
     <div className="overflow-hidden rounded-[6px] border border-border bg-card transition-colors hover:border-muted" style={{ transitionDuration: '150ms' }}>

@@ -176,6 +176,27 @@ export default function OutlinePage() {
   useEffect(() => {
     let cancelled = false
 
+    async function loadOrGenerate() {
+      // Check if outline already exists
+      const supabase = createClient()
+      const { data: course } = await supabase
+        .from('courses')
+        .select('outline_json, status')
+        .eq('id', courseId)
+        .single()
+
+      if (cancelled) return
+
+      if (course?.outline_json && Array.isArray(course.outline_json) && course.outline_json.length > 0) {
+        setOutline(course.outline_json as OutlineModule[])
+        setPhase('editing')
+        return
+      }
+
+      // No outline yet, generate one
+      await generate()
+    }
+
     async function generate() {
       try {
         const response = await fetch('/api/generate-outline', {
@@ -282,7 +303,7 @@ export default function OutlinePage() {
       }
     }
 
-    generate()
+    loadOrGenerate()
 
     return () => {
       cancelled = true
