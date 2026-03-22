@@ -228,7 +228,8 @@ export default function NewCoursePage() {
         .single()
 
       if (insertError || !course) {
-        toast.error('Failed to create course. Please try again.')
+        console.error('[new-course] insert failed:', insertError)
+        toast.error(insertError?.message || 'Failed to create course. Please try again.')
         setGenerating(false)
         return
       }
@@ -289,7 +290,8 @@ export default function NewCoursePage() {
         .eq('id', courseId)
 
       if (updateError) {
-        toast.error('Failed to save content. Please try again.')
+        console.error('[new-course] update raw_content failed:', updateError)
+        toast.error(updateError.message || 'Failed to save content. Please try again.')
         setGenerating(false)
         return
       }
