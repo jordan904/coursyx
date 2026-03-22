@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { Navbar } from '@/components/shared/navbar'
+import { trackRedditEvent } from '@/lib/analytics'
 
 const signupSchema = z.object({
   email: z.string().email('Enter a valid email address'),
@@ -74,6 +75,7 @@ export default function SignupPage() {
         return
       }
 
+      trackRedditEvent('SignUp')
       router.push('/course/new')
     } catch {
       setErrors({ form: 'Connection error. Please try again.' })

@@ -1,6 +1,9 @@
 import type { Metadata } from 'next'
 import { Instrument_Serif, DM_Sans } from 'next/font/google'
+import { GoogleAnalytics } from '@next/third-parties/google'
 import { Toaster } from 'react-hot-toast'
+import { RedditPixel } from '@/components/shared/reddit-pixel'
+import { Hotjar } from '@/components/shared/hotjar'
 import { validateEnv } from '@/lib/env'
 import './globals.css'
 
@@ -47,6 +50,11 @@ export default function RootLayout({
     <html lang="en" className={`${instrumentSerif.variable} ${dmSans.variable}`}>
       <body className="font-sans antialiased">
         {children}
+        {process.env.NODE_ENV === 'production' && process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID && (
+          <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID} />
+        )}
+        <RedditPixel />
+        <Hotjar />
         <Toaster
           position="bottom-right"
           toastOptions={{
