@@ -1,8 +1,21 @@
 export const maxDuration = 60
 
 import { z } from 'zod'
+import { Ratelimit } from '@upstash/ratelimit'
+import { Redis } from '@upstash/redis'
 import FirecrawlApp from '@mendable/firecrawl-js'
 import { createClient } from '@/lib/supabase/server'
+
+const redis = new Redis({
+  url: process.env.UPSTASH_REDIS_REST_URL!,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+})
+
+const ratelimit = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(10, '1 h'),
+  prefix: 'ratelimit:scrape-url',
+})
 
 const bodySchema = z.object({
   url: z.string().url('Invalid URL format.'),
@@ -32,6 +45,12 @@ export async function POST(request: Request) {
   }
 
   const { url: inputUrl } = parsed.data
+
+  // Rate limit by user.id
+  const { success: rateLimitOk } = await ratelimit.limit(user.id)
+  if (!rateLimitOk) {
+    return Response.json({ error: "You've hit the limit. Try again in an hour." }, { status: 429 })
+  }
 
   // SSRF protection: URL validation
   let parsedUrl: URL
