@@ -29,7 +29,7 @@ const SCRIPT_SYSTEM_PROMPT = `You are writing a short video script for a Skool c
 
 Rules:
 - Write in a conversational, direct second-person tone (you, not students).
-- Target 2 to 3 minutes of speaking time. Write approximately 300 to 450 words. This is a firm range — never go below 300 or above 450.
+- Target 2 to 3 minutes of speaking time. Write approximately 300 to 450 words. This is a firm range. Never go below 300 or above 450.
 - Structure exactly: Hook (15 seconds, opens with a question or bold statement) → Main content (2 minutes) → Action Item callout (15 seconds) → Sign-off (15 seconds).
 - Include natural pause and emphasis cues in [brackets] where helpful (e.g. [pause], [emphasise this]).
 - End by stating the lesson's action item clearly.

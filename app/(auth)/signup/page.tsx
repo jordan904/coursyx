@@ -90,7 +90,7 @@ export default function SignupPage() {
           <Image src="/logo.jpg" alt="Coursyx" width={64} height={64} className="size-16 mx-auto mb-4" />
           <h1 className="font-heading text-4xl mb-2">Create your account</h1>
           <p className="text-sm text-[var(--muted-foreground)]">
-            Start building your first Skool course — free
+            Start building your first Skool course for free
           </p>
         </div>
 

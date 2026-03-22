@@ -39,7 +39,7 @@ export async function POST(request: Request) {
     return Response.json({ error: 'Invalid request.' }, { status: 400 })
   }
 
-  // Stripe not configured yet — return friendly message
+  // Stripe not configured yet. Return friendly message
   if (!process.env.STRIPE_SECRET_KEY) {
     return Response.json({ error: 'Billing is not available yet. Check back soon.' }, { status: 503 })
   }

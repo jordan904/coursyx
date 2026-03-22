@@ -252,7 +252,7 @@ export default function NewCoursePage() {
 
           if (!response.ok) {
             toast.error(data.error || `Failed to parse ${file.name}`)
-            // Continue with other sources — do NOT return early
+            // Continue with other sources, do NOT return early
             continue
           }
 
@@ -334,7 +334,7 @@ export default function NewCoursePage() {
             : 'Add your source material. Upload a PDF, grab a YouTube transcript, scrape a URL, or just paste your notes.'}
         </p>
 
-        {/* STEP 1 — Course Details */}
+        {/* STEP 1: Course Details */}
         {step === 1 && (
           <div className="space-y-6 animate-fade-up">
             <div className="space-y-2">
@@ -401,7 +401,7 @@ export default function NewCoursePage() {
           </div>
         )}
 
-        {/* STEP 2 — Source Material */}
+        {/* STEP 2: Source Material */}
         {step === 2 && (
           <div className="space-y-6 animate-fade-up">
             {/* Tab buttons */}

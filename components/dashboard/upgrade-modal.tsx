@@ -138,7 +138,7 @@ export function UpgradeModal({ open, onClose, plan }: UpgradeModalProps) {
             disabled={loading !== null}
             className="text-xs text-[var(--muted-foreground)] hover:text-[var(--accent)] transition-colors duration-150 underline underline-offset-2 disabled:opacity-50"
           >
-            {loading === 'pay_per_course' ? 'Redirecting...' : 'Buy a single course — $15'}
+            {loading === 'pay_per_course' ? 'Redirecting...' : 'Buy a single course for $15'}
           </button>
         </div>
       </div>

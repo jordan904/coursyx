@@ -57,7 +57,7 @@ const TOPIC_STYLES: TopicStyle[] = [
     scene: [
       'Dramatic close-up of premium fitness equipment on a dark matte surface, a single kettlebell or dumbbell with orange rim lighting, moody and powerful',
       'Dark gym floor with chalk dust particles floating in a beam of warm directional light, minimal composition, raw and authentic energy',
-      'Clean arrangement of fitness gear — jump rope, water bottle, towel — on dark concrete surface, overhead shot, editorial style with warm accent lighting',
+      'Clean arrangement of fitness gear (jump rope, water bottle, towel) on dark concrete surface, overhead shot, editorial style with warm accent lighting',
     ],
     colors: [{ r: 13, g: 15, b: 18 }, { r: 232, g: 98, b: 42 }, { r: 220, g: 50, b: 47 }],
   },
@@ -66,7 +66,7 @@ const TOPIC_STYLES: TopicStyle[] = [
     scene: [
       'A dark artist workspace with paint tubes and brushes arranged artfully, splashes of vivid color against the dark surface, dramatic overhead light',
       'Abstract fluid art frozen mid-pour, vivid magenta and gold paint streams against a pure black background, high contrast editorial shot',
-      'Clean dark desk with design tools — a stylus, color swatches, and a sketchbook — soft warm side lighting, minimal and modern',
+      'Clean dark desk with design tools (a stylus, color swatches, and a sketchbook), soft warm side lighting, minimal and modern',
     ],
     colors: [{ r: 13, g: 15, b: 18 }, { r: 200, g: 50, b: 150 }, { r: 232, g: 178, b: 42 }],
   },
@@ -101,7 +101,7 @@ const TOPIC_STYLES: TopicStyle[] = [
     keywords: ['mindset', 'psychology', 'habit', 'productivity', 'personal', 'self', 'motivation', 'confidence', 'leadership', 'communication', 'relationship', 'coaching', 'spiritual'],
     scene: [
       'A single lit candle on a dark surface creating a warm glow, smooth stones stacked in balance nearby, minimal and contemplative, soft warm light',
-      'Abstract sunrise colors emerging from darkness — warm gold and soft orange gradients transitioning from deep black, hopeful and expansive',
+      'Abstract sunrise colors emerging from darkness, warm gold and soft orange gradients transitioning from deep black, hopeful and expansive',
       'Clean dark surface with a compass and a clear path of light leading forward, metaphorical and aspirational, warm directional lighting',
     ],
     colors: [{ r: 13, g: 15, b: 18 }, { r: 232, g: 178, b: 42 }, { r: 232, g: 98, b: 42 }],
@@ -259,7 +259,7 @@ export async function POST(request: Request) {
   try {
     const fal = getFal()
 
-    // Recraft V3 — best AI model for text rendering in images
+    // Recraft V3: best AI model for text rendering in images
     const result = await fal.subscribe('fal-ai/recraft/v3/text-to-image', {
       input: {
         prompt: imagePrompt,

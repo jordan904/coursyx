@@ -6,7 +6,7 @@ import { Navbar } from '@/components/shared/navbar'
 
 const features = [
   { title: 'Upload anything', description: 'PDFs, YouTube links, URLs, or paste your notes directly.' },
-  { title: 'Built for Skool', description: 'Every output formatted for Skool Classroom — zero reformatting.' },
+  { title: 'Built for Skool', description: 'Every output formatted for Skool Classroom. Zero reformatting.' },
   { title: 'Copy and paste ready', description: 'Modules, lessons, and action items ready to drop in.' },
   { title: 'AI cover images', description: 'Professional course covers generated with one click.' },
   { title: 'Quiz and script generator', description: 'Knowledge checks and video scripts for every lesson.' },
@@ -47,7 +47,7 @@ export default function LandingPage() {
             >
               Coursyx takes your PDF, YouTube link, or pasted notes and builds a complete
               Skool Classroom with modules, quizzes, video scripts, and a cover
-              image — ready to paste in under two minutes.
+              image. Ready to paste in under two minutes.
             </p>
             <div
               className="animate-fade-up space-y-3"
@@ -100,7 +100,7 @@ export default function LandingPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
           {[
             { step: 1, heading: 'Upload your content', description: 'Drop a PDF, paste a YouTube link, or type your notes.' },
-            { step: 2, heading: 'AI builds your course', description: 'Modules, lessons, quizzes, scripts, and a cover image — generated in minutes.' },
+            { step: 2, heading: 'AI builds your course', description: 'Modules, lessons, quizzes, scripts, and a cover image. All generated in minutes.' },
             { step: 3, heading: 'Paste into Skool', description: 'Copy each section directly into your Skool Classroom. Zero reformatting.' },
           ].map((item, i) => (
             <div

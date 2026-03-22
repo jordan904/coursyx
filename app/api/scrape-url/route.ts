@@ -33,7 +33,7 @@ export async function POST(request: Request) {
 
   const { url: inputUrl } = parsed.data
 
-  // SSRF protection — URL validation
+  // SSRF protection: URL validation
   let parsedUrl: URL
   try {
     parsedUrl = new URL(inputUrl)

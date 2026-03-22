@@ -22,16 +22,16 @@ const dmSans = DM_Sans({
 })
 
 export const metadata: Metadata = {
-  title: 'Coursyx — AI Course Builder for Skool',
+  title: 'Coursyx | AI Course Builder for Skool',
   description:
-    'Turn any PDF, YouTube video, URL, or text into a complete Skool Classroom with modules, quizzes, video scripts, and cover images — ready to paste in under two minutes.',
+    'Turn any PDF, YouTube video, URL, or text into a complete Skool Classroom with modules, quizzes, video scripts, and cover images. Ready to paste in under two minutes.',
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'),
   icons: {
     icon: '/logo.jpg',
     apple: '/logo.jpg',
   },
   openGraph: {
-    title: 'Coursyx — AI Course Builder for Skool',
+    title: 'Coursyx | AI Course Builder for Skool',
     description:
       'The only Skool-native course generator. Upload anything, get a complete course with quizzes, video scripts, and AI cover images.',
     type: 'website',

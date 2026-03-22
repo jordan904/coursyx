@@ -1039,14 +1039,14 @@ export function CourseEditor({ course }: { course: Course }) {
   const enrichmentItems: { type: string; label: string; moduleIdx: number; lessonIdx?: number }[] = []
   modules.forEach((mod, mIdx) => {
     if (quizMap[mIdx]) {
-      enrichmentItems.push({ type: 'quiz', label: `${mod.module_title} — Quiz`, moduleIdx: mIdx })
+      enrichmentItems.push({ type: 'quiz', label: `${mod.module_title}: Quiz`, moduleIdx: mIdx })
     }
     if (postMap[mIdx]) {
-      enrichmentItems.push({ type: 'post', label: `${mod.module_title} — Discussion`, moduleIdx: mIdx })
+      enrichmentItems.push({ type: 'post', label: `${mod.module_title}: Discussion`, moduleIdx: mIdx })
     }
     mod.lessons.forEach((lesson, lIdx) => {
       if (scriptMap[`${mIdx}-${lIdx}`]) {
-        enrichmentItems.push({ type: 'script', label: `${lesson.lesson_title} — Script`, moduleIdx: mIdx, lessonIdx: lIdx })
+        enrichmentItems.push({ type: 'script', label: `${lesson.lesson_title}: Script`, moduleIdx: mIdx, lessonIdx: lIdx })
       }
     })
   })
@@ -1110,7 +1110,7 @@ export function CourseEditor({ course }: { course: Course }) {
             className={`flex-1 rounded-[6px] text-xs${coverImageCount >= 3 ? ' opacity-50' : ''}`}
           >
             {coverImageCount >= 3 ? (
-              '3/3 — Limit reached'
+              '3/3 Limit reached'
             ) : generatingImage ? (
               <>
                 <Loader2 className="size-3 animate-spin mr-1" />

@@ -36,7 +36,7 @@ export async function getSubscription(userId: string): Promise<Subscription | nu
   return data as Subscription | null
 }
 
-// Returns the effective plan — if subscription is not active/trialing, treat as free
+// Returns the effective plan. If subscription is not active/trialing, treat as free
 function effectivePlan(sub: Subscription | null): string {
   if (!sub) return 'free'
   if (['active', 'trialing'].includes(sub.status)) return sub.plan
@@ -53,12 +53,12 @@ export async function checkCourseCreationAllowed(userId: string): Promise<{
   const limits = PLAN_LIMITS[plan] ?? PLAN_LIMITS.free
 
   if (limits.lifetimeLimit !== null) {
-    // Free plan — check lifetime count
+    // Free plan: check lifetime count
     const used = sub?.lifetime_course_count ?? 0
     if (used < limits.lifetimeLimit) {
       return { allowed: true }
     }
-    // Over lifetime limit — check credits
+    // Over lifetime limit: check credits
     if (sub && sub.course_credits > 0) {
       return { allowed: true, usingCredit: true }
     }
@@ -69,12 +69,12 @@ export async function checkCourseCreationAllowed(userId: string): Promise<{
   }
 
   if (limits.monthlyLimit !== null) {
-    // Pro/Max — check monthly count
+    // Pro/Max: check monthly count
     const used = sub?.monthly_course_count ?? 0
     if (used < limits.monthlyLimit) {
       return { allowed: true }
     }
-    // Over monthly limit — check credits
+    // Over monthly limit: check credits
     if (sub && sub.course_credits > 0) {
       return { allowed: true, usingCredit: true }
     }
@@ -92,7 +92,7 @@ export async function incrementCourseUsage(userId: string, usingCredit: boolean)
   if (!sub) return
 
   if (usingCredit) {
-    // Consume a credit — don't increment monthly/lifetime counts
+    // Consume a credit. Don't increment monthly/lifetime counts
     await supabaseAdmin
       .from('subscriptions')
       .update({ course_credits: Math.max(0, sub.course_credits - 1) })

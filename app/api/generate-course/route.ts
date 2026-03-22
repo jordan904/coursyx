@@ -28,9 +28,9 @@ const COURSE_SYSTEM_PROMPT = `You are a world-class course creator for Skool com
 
 Rules:
 - Follow the approved outline exactly. Do not add or remove modules or lessons.
-- Each module must include exactly 2 to 3 learning outcomes (what the learner will be able to DO after completing the module — start each with a verb).
+- Each module must include exactly 2 to 3 learning outcomes (what the learner will be able to DO after completing the module. Start each with a verb).
 - Each lesson is under 400 words in direct second-person tone (you, not students or learners).
-- Every lesson ends with exactly one Action Item — one specific task completable in under 30 minutes.
+- Every lesson ends with exactly one Action Item: one specific task completable in under 30 minutes.
 - Output ONLY a raw valid JSON array. Zero text before or after. Zero markdown fences. Zero explanation.
 - Schema: [{"module_title":"string","learning_outcomes":["string","string"],"lessons":[{"lesson_title":"string","body":"string","action_item":"string"}]}]
 

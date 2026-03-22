@@ -67,7 +67,7 @@ export async function POST(request: Request) {
   })
 
   if (userError) {
-    // Don't leak internal errors — check for common cases
+    // Don't leak internal errors. Check for common cases
     if (userError.message?.includes('already been registered') || userError.message?.includes('already exists')) {
       return Response.json({ error: 'An account with this email already exists.' }, { status: 409 })
     }

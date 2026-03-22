@@ -21,7 +21,7 @@ export default async function CourseEditorPage({
     redirect('/login')
   }
 
-  // Uses RLS-scoped client — only returns courses owned by the authenticated user
+  // Uses RLS-scoped client. Only returns courses owned by the authenticated user
   const { data: course, error } = await supabase
     .from('courses')
     .select('*')

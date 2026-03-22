@@ -111,7 +111,7 @@ export async function POST(request: Request) {
     .update({ status: 'generating' })
     .eq('id', courseId)
 
-  // Build user message — user content in user message only, never in system prompt
+  // Build user message. User content in user message only, never in system prompt
   const userMessage = `Course title: ${safeTitle}
 Target audience: ${safeAudience}
 Language: ${course.language ?? 'English'}

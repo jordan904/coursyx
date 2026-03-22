@@ -60,7 +60,7 @@ export async function POST(request: Request) {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-// The Stripe SDK types changed in recent versions — subscription period fields
+// The Stripe SDK types changed in recent versions. Subscription period fields
 // may live at different levels. Use any-typed access for safety.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function getSubscriptionPeriod(sub: any): { start: string; end: string } {

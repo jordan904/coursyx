@@ -15,7 +15,7 @@ export function getStripe(): Stripe {
   return _stripe
 }
 
-// Price ID allowlist — only these can be passed to checkout
+// Price ID allowlist: only these can be passed to checkout
 export function getValidPriceIds(): string[] {
   return [
     process.env.STRIPE_PRICE_PRO_MONTHLY!,

@@ -1,6 +1,6 @@
 import { fal } from '@fal-ai/client'
 
-// Server-only — import only from API routes.
+// Server-only. Import only from API routes.
 // Configure lazily so missing FAL_KEY doesn't crash unrelated pages.
 let configured = false
 

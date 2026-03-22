@@ -8,7 +8,7 @@ export function validateEnv() {
     'UPSTASH_REDIS_REST_TOKEN',
   ] as const
 
-  // These are optional — features degrade gracefully without them
+  // These are optional. Features degrade gracefully without them
   const optional = [
     'NEXT_PUBLIC_APP_URL',
     'FAL_KEY',
