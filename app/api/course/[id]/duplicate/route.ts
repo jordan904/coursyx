@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
+import { checkCourseCreationAllowed } from '@/lib/billing'
 
 function isValidUUID(id: string): boolean {
   return /^[0-9a-f-]{36}$/.test(id)
@@ -38,17 +39,10 @@ export async function POST(
     return Response.json({ error: 'Forbidden' }, { status: 403 })
   }
 
-  // Check course limit (2 per free user)
-  const { count } = await supabaseAdmin
-    .from('courses')
-    .select('id', { count: 'exact', head: true })
-    .eq('user_id', user.id)
-
-  if (count !== null && count >= 2) {
-    return Response.json(
-      { error: 'You have reached the maximum of 2 courses. Contact us to request more.' },
-      { status: 403 }
-    )
+  // Billing: check course creation allowance
+  const billingCheck = await checkCourseCreationAllowed(user.id)
+  if (!billingCheck.allowed) {
+    return Response.json({ error: billingCheck.error }, { status: 403 })
   }
 
   // Insert duplicate with reset fields

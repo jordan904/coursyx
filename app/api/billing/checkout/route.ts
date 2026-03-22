@@ -86,25 +86,26 @@ export async function POST(request: Request) {
 
   const isSubscription = isSubscriptionPrice(priceId)
 
-  const sessionParams: Parameters<typeof stripe.checkout.sessions.create>[0] = {
-    customer: stripeCustomerId,
-    line_items: [{ price: priceId, quantity: 1 }],
-    mode: isSubscription ? 'subscription' : 'payment',
-    success_url: `${appUrl}/dashboard?billing=success`,
-    cancel_url: `${appUrl}/dashboard?billing=canceled`,
-  }
-
-  if (isSubscription) {
-    sessionParams.subscription_data = {
-      metadata: { user_id: user.id },
-    }
-  } else {
-    sessionParams.payment_intent_data = {
-      metadata: { user_id: user.id },
-    }
-  }
-
   try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const sessionParams: any = {
+      customer: stripeCustomerId,
+      line_items: [{ price: priceId, quantity: 1 }],
+      mode: isSubscription ? 'subscription' : 'payment',
+      success_url: `${appUrl}/dashboard?billing=success`,
+      cancel_url: `${appUrl}/dashboard?billing=canceled`,
+    }
+
+    if (isSubscription) {
+      sessionParams.subscription_data = {
+        metadata: { user_id: user.id },
+      }
+    } else {
+      sessionParams.payment_intent_data = {
+        metadata: { user_id: user.id },
+      }
+    }
+
     const session = await stripe.checkout.sessions.create(sessionParams)
     return Response.json({ url: session.url })
   } catch (err) {

@@ -196,16 +196,21 @@ export default function NewCoursePage() {
         return
       }
 
-      // Check course limit (2 per free user)
-      const { count } = await supabase
-        .from('courses')
-        .select('id', { count: 'exact', head: true })
-        .eq('user_id', user.id)
-
-      if (count !== null && count >= 2) {
-        toast.error('You have reached the maximum of 2 courses. Contact us to request more.')
-        setGenerating(false)
-        return
+      // Check course creation allowance (billing)
+      const usageRes = await fetch('/api/billing/usage')
+      if (usageRes.ok) {
+        const usage = await usageRes.json()
+        const limit = usage.lifetimeLimit ?? usage.monthlyLimit
+        const used = usage.lifetimeLimit ? usage.lifetimeUsed : usage.monthlyUsed
+        if (limit !== null && used >= limit && usage.credits <= 0) {
+          toast.error(
+            usage.plan === 'free'
+              ? 'You\'ve reached the free plan limit. Upgrade to Pro to create more courses.'
+              : `You've used all ${limit} courses this month. Upgrade or buy a single course to continue.`
+          )
+          setGenerating(false)
+          return
+        }
       }
 
       // Create course row

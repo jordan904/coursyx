@@ -4,6 +4,7 @@ import { Redis } from '@upstash/redis'
 import { createClient } from '@/lib/supabase/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { getFal } from '@/lib/fal'
+import { checkCoverImageAllowed, incrementCoverImageCount } from '@/lib/billing'
 
 export const maxDuration = 60
 
@@ -219,16 +220,18 @@ export async function POST(request: Request) {
     return Response.json({ error: "You've hit the limit. Try again in an hour." }, { status: 429 })
   }
 
-  // Lifetime limit: 5 cover images per course
-  const currentHistory: string[] = Array.isArray(course.cover_image_history)
-    ? course.cover_image_history
-    : []
-  if (currentHistory.length >= 5) {
+  // Cover image limit: 3 per course
+  const coverCheck = await checkCoverImageAllowed(courseId)
+  if (!coverCheck.allowed) {
     return Response.json(
-      { error: 'You have reached the maximum of 5 cover images for this course.' },
+      { error: coverCheck.error, coverImageCount: coverCheck.count },
       { status: 403 }
     )
   }
+
+  const currentHistory: string[] = Array.isArray(course.cover_image_history)
+    ? course.cover_image_history
+    : []
 
   const safeTitle = (course.title ?? '').replace(/[\n\r]/g, ' ').slice(0, 200)
   const safeAudience = (course.target_audience ?? '').replace(/[\n\r]/g, ' ').slice(0, 500)
@@ -302,7 +305,7 @@ export async function POST(request: Request) {
 
     const coverImageUrl = publicUrlData.publicUrl
 
-    // Append to cover image history
+    // Append to cover image history and increment count
     const newHistory = [...currentHistory, coverImageUrl]
 
     await supabaseAdmin
@@ -313,7 +316,13 @@ export async function POST(request: Request) {
       })
       .eq('id', courseId)
 
-    return Response.json({ coverImageUrl, coverImageHistory: newHistory })
+    await incrementCoverImageCount(courseId)
+
+    return Response.json({
+      coverImageUrl,
+      coverImageHistory: newHistory,
+      coverImageCount: coverCheck.count + 1,
+    })
   } catch (err) {
     console.error('[generate-cover-image] Error:', err)
     return Response.json({ error: 'Image generation failed' }, { status: 500 })

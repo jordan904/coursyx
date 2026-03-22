@@ -6,6 +6,7 @@ import { Ratelimit } from '@upstash/ratelimit'
 import { Redis } from '@upstash/redis'
 import { createClient } from '@/lib/supabase/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
+import { checkCourseCreationAllowed, incrementCourseUsage } from '@/lib/billing'
 
 export const maxDuration = 60
 
@@ -85,6 +86,17 @@ export async function POST(request: Request) {
     return Response.json({ error: "You've hit the limit. Try again in an hour." }, { status: 429 })
   }
 
+  // Billing: check course creation allowance (only on first outline generation for this course)
+  const isFirstOutline = !course.outline_json
+  let usingCredit = false
+  if (isFirstOutline) {
+    const billingCheck = await checkCourseCreationAllowed(user.id)
+    if (!billingCheck.allowed) {
+      return Response.json({ error: billingCheck.error }, { status: 403 })
+    }
+    usingCredit = billingCheck.usingCredit ?? false
+  }
+
   // Sanitize inputs
   const safeTitle = (course.title ?? '').replace(/[\n\r]/g, ' ').slice(0, 200)
   const safeAudience = (course.target_audience ?? '').replace(/[\n\r]/g, ' ').slice(0, 500)
@@ -141,6 +153,11 @@ ${safeContent}`
           .from('courses')
           .update({ outline_json: parsed, status: 'outline' })
           .eq('id', courseId)
+
+        // Increment course usage counter after successful generation
+        if (isFirstOutline) {
+          await incrementCourseUsage(user.id, usingCredit)
+        }
 
         controller.enqueue(encoder.encode('__DONE__'))
       } catch (err) {
