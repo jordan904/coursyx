@@ -23,11 +23,17 @@ async function extractViaInnerTube(videoId: string): Promise<string | null> {
         videoId,
       }),
     })
-    if (!res.ok) return null
+    if (!res.ok) {
+      console.error('[extract-youtube] InnerTube status:', res.status)
+      return null
+    }
 
     const data = await res.json()
     const tracks = data?.captions?.playerCaptionsTracklistRenderer?.captionTracks
-    if (!Array.isArray(tracks) || tracks.length === 0) return null
+    if (!Array.isArray(tracks) || tracks.length === 0) {
+      console.error('[extract-youtube] InnerTube: no caption tracks found')
+      return null
+    }
 
     const track = tracks[0]
     const baseUrl = track.baseUrl as string
@@ -36,11 +42,17 @@ async function extractViaInnerTube(videoId: string): Promise<string | null> {
     const captionRes = await fetch(baseUrl, {
       headers: { 'User-Agent': USER_AGENT },
     })
-    if (!captionRes.ok) return null
+    if (!captionRes.ok) {
+      console.error('[extract-youtube] Caption fetch status:', captionRes.status)
+      return null
+    }
 
     const xml = await captionRes.text()
-    return parseTranscriptXml(xml)
-  } catch {
+    const result = parseTranscriptXml(xml)
+    console.log('[extract-youtube] InnerTube extracted:', result.length, 'chars')
+    return result
+  } catch (err) {
+    console.error('[extract-youtube] InnerTube error:', err)
     return null
   }
 }
@@ -50,12 +62,21 @@ async function extractViaWebPage(videoId: string): Promise<string | null> {
     const res = await fetch(`https://www.youtube.com/watch?v=${videoId}`, {
       headers: { 'User-Agent': USER_AGENT },
     })
-    if (!res.ok) return null
+    if (!res.ok) {
+      console.error('[extract-youtube] WebPage fetch status:', res.status)
+      return null
+    }
 
     const html = await res.text()
 
-    if (html.includes('class="g-recaptcha"')) return null
-    if (!html.includes('"playabilityStatus":')) return null
+    if (html.includes('class="g-recaptcha"')) {
+      console.error('[extract-youtube] WebPage: hit captcha')
+      return null
+    }
+    if (!html.includes('"playabilityStatus":')) {
+      console.error('[extract-youtube] WebPage: no playabilityStatus')
+      return null
+    }
 
     // Extract ytInitialPlayerResponse JSON
     const marker = 'var ytInitialPlayerResponse = '

@@ -9,7 +9,6 @@ import { Upload, X, Loader2, FileText, Globe, Youtube, Type } from 'lucide-react
 import { createClient } from '@/lib/supabase/client'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Navbar } from '@/components/shared/navbar'
 
 const LANGUAGES = [
@@ -41,6 +40,7 @@ export default function NewCoursePage() {
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   // Step 2 fields
+  const [activeTab, setActiveTab] = useState<'pdf' | 'youtube' | 'website' | 'paste'>('pdf')
   const [pdfFiles, setPdfFiles] = useState<File[]>([])
   const [youtubeUrl, setYoutubeUrl] = useState('')
   const [websiteUrl, setWebsiteUrl] = useState('')
@@ -404,42 +404,35 @@ export default function NewCoursePage() {
         {/* STEP 2 — Source Material */}
         {step === 2 && (
           <div className="space-y-6 animate-fade-up">
-            <Tabs defaultValue="pdf">
-              <TabsList className="w-full bg-[var(--card)] border border-[var(--border)] rounded-[6px] p-1">
-                <TabsTrigger
-                  value="pdf"
-                  className="flex items-center gap-1.5 rounded-[4px] data-[active]:bg-[var(--muted)] text-sm"
+            {/* Tab buttons */}
+            <div className="flex rounded-[6px] border border-[var(--border)] bg-[var(--card)] p-1 gap-1">
+              {([
+                { key: 'pdf' as const, icon: FileText, label: 'PDF' },
+                { key: 'youtube' as const, icon: Youtube, label: 'YouTube' },
+                { key: 'website' as const, icon: Globe, label: 'Website' },
+                { key: 'paste' as const, icon: Type, label: 'Paste Text' },
+              ]).map(({ key, icon: Icon, label }) => (
+                <button
+                  key={key}
+                  onClick={() => setActiveTab(key)}
+                  className={`flex-1 flex items-center justify-center gap-1.5 rounded-[4px] px-3 py-2 text-sm font-medium transition-colors duration-150 ${
+                    activeTab === key
+                      ? 'bg-[var(--muted)] text-[var(--foreground)]'
+                      : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
+                  }`}
                 >
-                  <FileText className="size-3.5" />
-                  PDF Upload
-                </TabsTrigger>
-                <TabsTrigger
-                  value="youtube"
-                  className="flex items-center gap-1.5 rounded-[4px] data-[active]:bg-[var(--muted)] text-sm"
-                >
-                  <Youtube className="size-3.5" />
-                  YouTube
-                </TabsTrigger>
-                <TabsTrigger
-                  value="website"
-                  className="flex items-center gap-1.5 rounded-[4px] data-[active]:bg-[var(--muted)] text-sm"
-                >
-                  <Globe className="size-3.5" />
-                  Website URL
-                </TabsTrigger>
-                <TabsTrigger
-                  value="paste"
-                  className="flex items-center gap-1.5 rounded-[4px] data-[active]:bg-[var(--muted)] text-sm"
-                >
-                  <Type className="size-3.5" />
-                  Paste Text
-                </TabsTrigger>
-              </TabsList>
+                  <Icon className="size-3.5" />
+                  {label}
+                </button>
+              ))}
+            </div>
 
-              {/* PDF Upload Tab */}
-              <TabsContent value="pdf" className="mt-4">
+            {/* Tab content */}
+            <div>
+              {/* PDF Upload */}
+              {activeTab === 'pdf' && (
                 <div className="rounded-[6px] border border-[var(--border)] bg-[var(--card)] p-5 space-y-4">
-                  <div className="space-y-2">
+                  <div className="space-y-1">
                     <Label>Upload PDF files</Label>
                     <p className="text-xs text-[var(--muted-foreground)]">Up to 3 files, 10MB each</p>
                   </div>
@@ -487,12 +480,12 @@ export default function NewCoursePage() {
                     </div>
                   )}
                 </div>
-              </TabsContent>
+              )}
 
-              {/* YouTube Tab */}
-              <TabsContent value="youtube" className="mt-4">
+              {/* YouTube */}
+              {activeTab === 'youtube' && (
                 <div className="rounded-[6px] border border-[var(--border)] bg-[var(--card)] p-5 space-y-4">
-                  <div className="space-y-2">
+                  <div className="space-y-1">
                     <Label htmlFor="youtube-url">YouTube video URL</Label>
                     <p className="text-xs text-[var(--muted-foreground)]">Paste a YouTube link to extract the transcript automatically</p>
                   </div>
@@ -517,7 +510,7 @@ export default function NewCoursePage() {
                           Extracting...
                         </>
                       ) : (
-                        'Extract Transcript'
+                        'Extract'
                       )}
                     </Button>
                   </div>
@@ -527,12 +520,12 @@ export default function NewCoursePage() {
                     </p>
                   )}
                 </div>
-              </TabsContent>
+              )}
 
-              {/* Website URL Tab */}
-              <TabsContent value="website" className="mt-4">
+              {/* Website URL */}
+              {activeTab === 'website' && (
                 <div className="rounded-[6px] border border-[var(--border)] bg-[var(--card)] p-5 space-y-4">
-                  <div className="space-y-2">
+                  <div className="space-y-1">
                     <Label htmlFor="website-url">Website URL</Label>
                     <p className="text-xs text-[var(--muted-foreground)]">Paste any URL to scrape its content as source material</p>
                   </div>
@@ -557,7 +550,7 @@ export default function NewCoursePage() {
                           Scraping...
                         </>
                       ) : (
-                        'Scrape Content'
+                        'Scrape'
                       )}
                     </Button>
                   </div>
@@ -567,12 +560,12 @@ export default function NewCoursePage() {
                     </p>
                   )}
                 </div>
-              </TabsContent>
+              )}
 
-              {/* Paste Text Tab */}
-              <TabsContent value="paste" className="mt-4">
+              {/* Paste Text */}
+              {activeTab === 'paste' && (
                 <div className="rounded-[6px] border border-[var(--border)] bg-[var(--card)] p-5 space-y-4">
-                  <div className="space-y-2">
+                  <div className="space-y-1">
                     <Label htmlFor="paste-text">Paste your content</Label>
                     <p className="text-xs text-[var(--muted-foreground)]">Paste notes, a transcript, an article, or any text you want to turn into a course</p>
                   </div>
@@ -588,8 +581,8 @@ export default function NewCoursePage() {
                     {pasteText.length.toLocaleString()} / 80,000 characters
                   </p>
                 </div>
-              </TabsContent>
-            </Tabs>
+              )}
+            </div>
 
             {/* Total character count */}
             <div className="rounded-[6px] border border-[var(--border)] bg-[var(--card)] px-4 py-3">
