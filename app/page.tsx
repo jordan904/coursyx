@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import Image from 'next/image'
+import { Navbar } from '@/components/shared/navbar'
 
 const features = [
   { title: 'Upload anything', description: 'PDFs, YouTube links, URLs, or paste your notes directly.' },
@@ -28,6 +29,7 @@ export default function LandingPage() {
 
   return (
     <main className="min-h-screen bg-[var(--background)]">
+      <Navbar showAuth />
       <div className="max-w-6xl mx-auto px-6 py-24">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-start">
           <div className="lg:col-span-7 space-y-8">

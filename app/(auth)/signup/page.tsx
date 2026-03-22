@@ -9,6 +9,7 @@ import { createClient } from '@/lib/supabase/client'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
+import { Navbar } from '@/components/shared/navbar'
 
 const signupSchema = z.object({
   email: z.string().email('Enter a valid email address'),
@@ -81,7 +82,9 @@ export default function SignupPage() {
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center px-4">
+    <main className="min-h-screen flex flex-col">
+      <Navbar backHref="/" backLabel="Home" />
+      <div className="flex-1 flex items-center justify-center px-4">
       <div className="w-full max-w-sm space-y-6">
         <div className="text-center">
           <Image src="/logo.jpg" alt="Coursyx" width={64} height={64} className="size-16 mx-auto mb-4" />
@@ -172,6 +175,7 @@ export default function SignupPage() {
             Sign in
           </Link>
         </p>
+      </div>
       </div>
     </main>
   )

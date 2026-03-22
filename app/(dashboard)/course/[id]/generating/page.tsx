@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Loader2 } from 'lucide-react'
+import { Navbar } from '@/components/shared/navbar'
 
 export default function GeneratingPage() {
   const router = useRouter()
@@ -129,77 +130,63 @@ export default function GeneratingPage() {
     }
   }, [courseId, router])
 
-  // Generating state
+  let content: React.ReactNode
+
   if (phase === 'generating') {
-    return (
-      <div className="min-h-screen bg-[#0D0F12] flex items-center justify-center p-6">
-        <div className="max-w-md w-full text-center">
-          <div className="mb-6">
-            <Loader2 className="w-10 h-10 text-[#E8622A] animate-spin mx-auto" />
-          </div>
-          <h1 className="font-heading text-2xl text-[#E8E3D5] mb-3">
-            Building your full course...
-          </h1>
-          <p className="text-[#8A8F98] text-sm mb-4">
-            Generating modules, lessons, learning outcomes, and action items from your approved outline.
-          </p>
-          <div className="bg-[#161A1F] border border-[#2A2E35] rounded-[6px] px-4 py-3">
-            <span className="text-[#8A8F98] text-sm">
-              {chars.toLocaleString()} characters generated
-            </span>
-          </div>
+    content = (
+      <div className="max-w-md w-full text-center">
+        <div className="mb-6">
+          <Loader2 className="w-10 h-10 text-[#E8622A] animate-spin mx-auto" />
+        </div>
+        <h1 className="font-heading text-2xl text-[#E8E3D5] mb-3">
+          Building your full course...
+        </h1>
+        <p className="text-[#8A8F98] text-sm mb-4">
+          Generating modules, lessons, learning outcomes, and action items from your approved outline.
+        </p>
+        <div className="bg-[#161A1F] border border-[#2A2E35] rounded-[6px] px-4 py-3">
+          <span className="text-[#8A8F98] text-sm">
+            {chars.toLocaleString()} characters generated
+          </span>
         </div>
       </div>
     )
-  }
-
-  // Rate limited
-  if (phase === 'rate-limited') {
-    return (
-      <div className="min-h-screen bg-[#0D0F12] flex items-center justify-center p-6">
-        <div className="max-w-md w-full text-center">
-          <h1 className="font-heading text-2xl text-[#E8E3D5] mb-3">
-            Rate limit reached
-          </h1>
-          <p className="text-[#8A8F98] text-sm mb-6">
-            You&apos;ve hit the course generation limit. Try again in an hour.
-          </p>
-          <button
-            onClick={() => router.push('/dashboard')}
-            className="bg-[#E8622A] text-white px-6 py-2.5 rounded-[6px] text-sm font-medium hover:opacity-90 transition-opacity duration-150"
-          >
-            Back to Dashboard
-          </button>
-        </div>
+  } else if (phase === 'rate-limited') {
+    content = (
+      <div className="max-w-md w-full text-center">
+        <h1 className="font-heading text-2xl text-[#E8E3D5] mb-3">
+          Rate limit reached
+        </h1>
+        <p className="text-[#8A8F98] text-sm mb-6">
+          You&apos;ve hit the course generation limit. Try again in an hour.
+        </p>
+        <button
+          onClick={() => router.push('/dashboard')}
+          className="bg-[#E8622A] text-white px-6 py-2.5 rounded-[6px] text-sm font-medium hover:opacity-90 transition-opacity duration-150"
+        >
+          Back to Dashboard
+        </button>
       </div>
     )
-  }
-
-  // Timeout
-  if (phase === 'timeout') {
-    return (
-      <div className="min-h-screen bg-[#0D0F12] flex items-center justify-center p-6">
-        <div className="max-w-md w-full text-center">
-          <h1 className="font-heading text-2xl text-[#E8E3D5] mb-3">
-            Taking longer than expected
-          </h1>
-          <p className="text-[#8A8F98] text-sm mb-6">
-            Your course is still being generated. Please check your dashboard in a few minutes.
-          </p>
-          <button
-            onClick={() => router.push('/dashboard')}
-            className="bg-[#E8622A] text-white px-6 py-2.5 rounded-[6px] text-sm font-medium hover:opacity-90 transition-opacity duration-150"
-          >
-            Back to Dashboard
-          </button>
-        </div>
+  } else if (phase === 'timeout') {
+    content = (
+      <div className="max-w-md w-full text-center">
+        <h1 className="font-heading text-2xl text-[#E8E3D5] mb-3">
+          Taking longer than expected
+        </h1>
+        <p className="text-[#8A8F98] text-sm mb-6">
+          Your course is still being generated. Please check your dashboard in a few minutes.
+        </p>
+        <button
+          onClick={() => router.push('/dashboard')}
+          className="bg-[#E8622A] text-white px-6 py-2.5 rounded-[6px] text-sm font-medium hover:opacity-90 transition-opacity duration-150"
+        >
+          Back to Dashboard
+        </button>
       </div>
     )
-  }
-
-  // Error state
-  return (
-    <div className="min-h-screen bg-[#0D0F12] flex items-center justify-center p-6">
+  } else {
+    content = (
       <div className="max-w-md w-full text-center">
         <h1 className="font-heading text-2xl text-[#E8E3D5] mb-3">
           Something went wrong
@@ -219,6 +206,15 @@ export default function GeneratingPage() {
             Back to Dashboard
           </button>
         </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen bg-[#0D0F12] flex flex-col">
+      <Navbar backHref="/dashboard" backLabel="Dashboard" />
+      <div className="flex-1 flex items-center justify-center p-6">
+        {content}
       </div>
     </div>
   )

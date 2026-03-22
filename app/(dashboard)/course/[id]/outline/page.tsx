@@ -22,6 +22,7 @@ import {
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { GripVertical, Plus, Trash2, Loader2 } from 'lucide-react'
+import { Navbar } from '@/components/shared/navbar'
 
 type OutlineModule = {
   module_title: string
@@ -473,7 +474,9 @@ export default function OutlinePage() {
 
   // Editing state
   return (
-    <div className="min-h-screen bg-[#0D0F12] p-6 md:p-10">
+    <div className="min-h-screen bg-[#0D0F12]">
+      <Navbar backHref="/dashboard" backLabel="Dashboard" />
+      <div className="p-6 md:p-10">
       <div className="max-w-3xl mx-auto">
         <div className="mb-8">
           <h1 className="font-heading text-3xl text-[#E8E3D5] mb-2">
@@ -531,6 +534,7 @@ export default function OutlinePage() {
             Looks good — Generate Full Course
           </button>
         </div>
+      </div>
       </div>
     </div>
   )

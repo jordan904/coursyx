@@ -10,6 +10,7 @@ import { createClient } from '@/lib/supabase/client'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
+import { Navbar } from '@/components/shared/navbar'
 
 const LANGUAGES = [
   'English',
@@ -301,7 +302,9 @@ export default function NewCoursePage() {
   }
 
   return (
-    <main className="min-h-screen px-4 py-12 md:py-20">
+    <main className="min-h-screen">
+      <Navbar backHref="/dashboard" backLabel="Dashboard" />
+      <div className="px-4 py-12 md:py-20">
       <div className="mx-auto max-w-2xl">
         {/* Step indicator */}
         <div className="mb-8 flex items-center gap-3 text-sm text-[var(--muted-foreground)]">
@@ -610,6 +613,7 @@ export default function NewCoursePage() {
             </div>
           </div>
         )}
+      </div>
       </div>
     </main>
   )
