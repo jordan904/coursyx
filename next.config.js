@@ -3,11 +3,11 @@ const securityHeaders = [
     key: 'Content-Security-Policy',
     value: [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.redditstatic.com https://static.hotjar.com",
+      "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.redditstatic.com https://static.hotjar.com https://t.contentsquare.net https://*.contentsquare.net",
       "style-src 'self' 'unsafe-inline' fonts.googleapis.com",
       "font-src 'self' fonts.gstatic.com",
       "img-src 'self' data: blob: https://*.fal.media https://*.fal.run https://*.supabase.co https://www.google-analytics.com https://alb.reddit.com",
-      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.anthropic.com https://queue.fal.run https://fal.run https://formspree.io https://www.google-analytics.com https://alb.reddit.com https://*.hotjar.com wss://*.hotjar.com https://*.hotjar.io",
+      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.anthropic.com https://queue.fal.run https://fal.run https://formspree.io https://www.google-analytics.com https://alb.reddit.com https://*.hotjar.com wss://*.hotjar.com https://*.hotjar.io https://*.contentsquare.net",
     ].join('; ')
   },
   { key: 'X-Frame-Options', value: 'DENY' },

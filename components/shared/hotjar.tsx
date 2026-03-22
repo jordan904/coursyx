@@ -1,17 +1,16 @@
 'use client'
 
-import { useEffect } from 'react'
+import Script from 'next/script'
 
 export function Hotjar() {
-  useEffect(() => {
-    if (process.env.NODE_ENV !== 'production') return
-    const hjid = process.env.NEXT_PUBLIC_HOTJAR_ID
-    if (!hjid) return
+  const siteId = process.env.NEXT_PUBLIC_HOTJAR_ID
+  if (!siteId || process.env.NODE_ENV !== 'production') return null
 
-    import('@hotjar/browser').then(({ default: hotjar }) => {
-      hotjar.init(Number(hjid), 6)
-    })
-  }, [])
-
-  return null
+  return (
+    <Script
+      id="hotjar-contentsquare"
+      strategy="afterInteractive"
+      src={`https://t.contentsquare.net/uxa/${siteId}.js`}
+    />
+  )
 }
