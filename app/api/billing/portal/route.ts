@@ -16,6 +16,10 @@ export async function POST() {
     .eq('user_id', user.id)
     .single()
 
+  if (!process.env.STRIPE_SECRET_KEY) {
+    return Response.json({ error: 'Billing is not available yet. Check back soon.' }, { status: 503 })
+  }
+
   if (!sub?.stripe_customer_id) {
     return Response.json({ error: 'No billing account found.' }, { status: 404 })
   }
