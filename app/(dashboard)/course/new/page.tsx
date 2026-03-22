@@ -438,58 +438,64 @@ export default function NewCoursePage() {
 
               {/* PDF Upload Tab */}
               <TabsContent value="pdf" className="mt-4">
-                <div
-                  {...getRootProps()}
-                  className={`rounded-[6px] border-2 border-dashed transition-colors duration-150 p-8 text-center cursor-pointer ${
-                    isDragActive
-                      ? 'border-[var(--accent)] bg-[var(--accent)]/5'
-                      : 'border-[var(--border)] hover:border-[var(--muted)]'
-                  }`}
-                >
-                  <input {...getInputProps()} aria-label="Upload PDF files" />
-                  <Upload className="mx-auto size-8 text-[var(--muted-foreground)] mb-3" />
-                  <p className="text-sm text-[var(--foreground)]">
-                    {isDragActive
-                      ? 'Drop your PDF here'
-                      : 'Drag and drop PDFs here, or click to browse'}
-                  </p>
-                  <p className="text-xs text-[var(--muted-foreground)] mt-1">
-                    Up to 3 files, 10MB each
-                  </p>
-                </div>
-
-                {pdfFiles.length > 0 && (
-                  <div className="mt-3 space-y-2">
-                    {pdfFiles.map((file, index) => (
-                      <div
-                        key={`${file.name}-${index}`}
-                        className="flex items-center gap-2 rounded-[6px] border border-[var(--border)] bg-[var(--card)] px-3 py-2"
-                      >
-                        <FileText className="size-4 text-[var(--accent)] shrink-0" />
-                        <span className="text-sm text-[var(--foreground)] truncate flex-1">
-                          {file.name}
-                        </span>
-                        <span className="text-xs text-[var(--muted-foreground)] shrink-0">
-                          {(file.size / 1024 / 1024).toFixed(1)}MB
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => removePdf(index)}
-                          className="text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors duration-150"
-                          aria-label={`Remove ${file.name}`}
-                        >
-                          <X className="size-4" />
-                        </button>
-                      </div>
-                    ))}
+                <div className="rounded-[6px] border border-[var(--border)] bg-[var(--card)] p-5 space-y-4">
+                  <div className="space-y-2">
+                    <Label>Upload PDF files</Label>
+                    <p className="text-xs text-[var(--muted-foreground)]">Up to 3 files, 10MB each</p>
                   </div>
-                )}
+                  <div
+                    {...getRootProps()}
+                    className={`rounded-[6px] border-2 border-dashed transition-colors duration-150 p-6 text-center cursor-pointer ${
+                      isDragActive
+                        ? 'border-[var(--accent)] bg-[var(--accent)]/5'
+                        : 'border-[var(--border)] hover:border-[var(--muted-foreground)]'
+                    }`}
+                  >
+                    <input {...getInputProps()} aria-label="Upload PDF files" />
+                    <Upload className="mx-auto size-6 text-[var(--muted-foreground)] mb-2" />
+                    <p className="text-sm text-[var(--foreground)]">
+                      {isDragActive
+                        ? 'Drop your PDF here'
+                        : 'Drag and drop PDFs here, or click to browse'}
+                    </p>
+                  </div>
+
+                  {pdfFiles.length > 0 && (
+                    <div className="space-y-2">
+                      {pdfFiles.map((file, index) => (
+                        <div
+                          key={`${file.name}-${index}`}
+                          className="flex items-center gap-2 rounded-[6px] border border-[var(--border)] bg-[var(--background)] px-3 py-2"
+                        >
+                          <FileText className="size-4 text-[var(--accent)] shrink-0" />
+                          <span className="text-sm text-[var(--foreground)] truncate flex-1">
+                            {file.name}
+                          </span>
+                          <span className="text-xs text-[var(--muted-foreground)] shrink-0">
+                            {(file.size / 1024 / 1024).toFixed(1)}MB
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => removePdf(index)}
+                            className="text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors duration-150"
+                            aria-label={`Remove ${file.name}`}
+                          >
+                            <X className="size-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </TabsContent>
 
               {/* YouTube Tab */}
-              <TabsContent value="youtube" className="mt-4 space-y-3">
-                <div className="space-y-2">
-                  <Label htmlFor="youtube-url">YouTube video URL</Label>
+              <TabsContent value="youtube" className="mt-4">
+                <div className="rounded-[6px] border border-[var(--border)] bg-[var(--card)] p-5 space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="youtube-url">YouTube video URL</Label>
+                    <p className="text-xs text-[var(--muted-foreground)]">Paste a YouTube link to extract the transcript automatically</p>
+                  </div>
                   <div className="flex gap-2">
                     <input
                       id="youtube-url"
@@ -497,7 +503,7 @@ export default function NewCoursePage() {
                       placeholder="https://www.youtube.com/watch?v=..."
                       value={youtubeUrl}
                       onChange={(e) => setYoutubeUrl(e.target.value)}
-                      className="flex-1 h-11 rounded-[6px] border border-[var(--border)] bg-transparent px-3 text-sm text-[var(--foreground)] outline-none focus:border-[var(--accent)] transition-colors duration-150 placeholder:text-[var(--muted-foreground)]"
+                      className="flex-1 h-11 rounded-[6px] border border-[var(--border)] bg-[var(--background)] px-3 text-sm text-[var(--foreground)] outline-none focus:border-[var(--accent)] transition-colors duration-150 placeholder:text-[var(--muted-foreground)]"
                     />
                     <Button
                       onClick={handleExtractYoutube}
@@ -515,18 +521,21 @@ export default function NewCoursePage() {
                       )}
                     </Button>
                   </div>
+                  {youtubeChars > 0 && (
+                    <p className="text-sm text-green-500">
+                      Extracted {youtubeChars.toLocaleString()} characters
+                    </p>
+                  )}
                 </div>
-                {youtubeChars > 0 && (
-                  <p className="text-sm text-green-500">
-                    Extracted {youtubeChars.toLocaleString()} characters
-                  </p>
-                )}
               </TabsContent>
 
               {/* Website URL Tab */}
-              <TabsContent value="website" className="mt-4 space-y-3">
-                <div className="space-y-2">
-                  <Label htmlFor="website-url">Website URL</Label>
+              <TabsContent value="website" className="mt-4">
+                <div className="rounded-[6px] border border-[var(--border)] bg-[var(--card)] p-5 space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="website-url">Website URL</Label>
+                    <p className="text-xs text-[var(--muted-foreground)]">Paste any URL to scrape its content as source material</p>
+                  </div>
                   <div className="flex gap-2">
                     <input
                       id="website-url"
@@ -534,7 +543,7 @@ export default function NewCoursePage() {
                       placeholder="https://example.com/article"
                       value={websiteUrl}
                       onChange={(e) => setWebsiteUrl(e.target.value)}
-                      className="flex-1 h-11 rounded-[6px] border border-[var(--border)] bg-transparent px-3 text-sm text-[var(--foreground)] outline-none focus:border-[var(--accent)] transition-colors duration-150 placeholder:text-[var(--muted-foreground)]"
+                      className="flex-1 h-11 rounded-[6px] border border-[var(--border)] bg-[var(--background)] px-3 text-sm text-[var(--foreground)] outline-none focus:border-[var(--accent)] transition-colors duration-150 placeholder:text-[var(--muted-foreground)]"
                     />
                     <Button
                       onClick={handleScrapeUrl}
@@ -552,28 +561,33 @@ export default function NewCoursePage() {
                       )}
                     </Button>
                   </div>
+                  {websiteChars > 0 && (
+                    <p className="text-sm text-green-500">
+                      Extracted {websiteChars.toLocaleString()} characters
+                    </p>
+                  )}
                 </div>
-                {websiteChars > 0 && (
-                  <p className="text-sm text-green-500">
-                    Extracted {websiteChars.toLocaleString()} characters
-                  </p>
-                )}
               </TabsContent>
 
               {/* Paste Text Tab */}
-              <TabsContent value="paste" className="mt-4 space-y-2">
-                <Label htmlFor="paste-text">Paste your content</Label>
-                <textarea
-                  id="paste-text"
-                  placeholder="Paste your notes, transcript, article, or any text content here..."
-                  value={pasteText}
-                  onChange={(e) => handlePasteChange(e.target.value)}
-                  rows={10}
-                  className="w-full rounded-[6px] border border-[var(--border)] bg-transparent px-3 py-3 text-sm text-[var(--foreground)] outline-none focus:border-[var(--accent)] transition-colors duration-150 placeholder:text-[var(--muted-foreground)] resize-y"
-                />
-                <p className="text-xs text-[var(--muted-foreground)] text-right">
-                  {pasteText.length.toLocaleString()} / 80,000 characters
-                </p>
+              <TabsContent value="paste" className="mt-4">
+                <div className="rounded-[6px] border border-[var(--border)] bg-[var(--card)] p-5 space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="paste-text">Paste your content</Label>
+                    <p className="text-xs text-[var(--muted-foreground)]">Paste notes, a transcript, an article, or any text you want to turn into a course</p>
+                  </div>
+                  <textarea
+                    id="paste-text"
+                    placeholder="Paste your content here..."
+                    value={pasteText}
+                    onChange={(e) => handlePasteChange(e.target.value)}
+                    rows={8}
+                    className="w-full rounded-[6px] border border-[var(--border)] bg-[var(--background)] px-3 py-3 text-sm text-[var(--foreground)] outline-none focus:border-[var(--accent)] transition-colors duration-150 placeholder:text-[var(--muted-foreground)] resize-y"
+                  />
+                  <p className="text-xs text-[var(--muted-foreground)] text-right">
+                    {pasteText.length.toLocaleString()} / 80,000 characters
+                  </p>
+                </div>
               </TabsContent>
             </Tabs>
 
