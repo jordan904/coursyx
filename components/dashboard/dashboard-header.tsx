@@ -5,8 +5,9 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { LogOut, Plus, HelpCircle, CreditCard } from 'lucide-react'
+import { LogOut, Plus, HelpCircle, CreditCard, ArrowUpCircle } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { UpgradeModal } from '@/components/dashboard/upgrade-modal'
 
 type UsageData = {
   plan: string
@@ -24,6 +25,7 @@ export function DashboardHeader() {
   const [submitting, setSubmitting] = useState(false)
   const [usage, setUsage] = useState<UsageData>(null)
   const [portalLoading, setPortalLoading] = useState(false)
+  const [showUpgrade, setShowUpgrade] = useState(false)
 
   useEffect(() => {
     fetch('/api/billing/usage')
@@ -86,12 +88,20 @@ export function DashboardHeader() {
                     : `${usage.monthlyUsed}/${usage.monthlyLimit} this month`}
                   {usage.credits > 0 && ` + ${usage.credits} credits`}
                 </span>
-                {usage.plan === 'free' && usage.lifetimeUsed >= usage.lifetimeLimit && (
-                  <Link href="#" className="text-[var(--accent)] font-medium hover:underline">
-                    Upgrade
-                  </Link>
-                )}
               </div>
+            )}
+
+            {usage && usage.plan === 'free' && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowUpgrade(true)}
+                className="hidden sm:flex rounded-[6px] border-[var(--accent)] text-[var(--accent)] hover:bg-[var(--accent)] hover:text-white text-xs"
+                style={{ transitionDuration: '150ms' }}
+              >
+                <ArrowUpCircle className="size-3.5" />
+                Upgrade
+              </Button>
             )}
 
             {usage && usage.plan !== 'free' && (
@@ -220,6 +230,12 @@ export function DashboardHeader() {
           </div>
         </div>
       )}
+
+      <UpgradeModal
+        open={showUpgrade}
+        onClose={() => setShowUpgrade(false)}
+        plan={usage?.plan || 'free'}
+      />
     </>
   )
 }
