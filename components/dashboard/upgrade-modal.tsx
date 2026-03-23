@@ -64,8 +64,10 @@ export function UpgradeModal({ open, onClose, plan }: UpgradeModalProps) {
           customer: { email: data.email },
           customData: { user_id: data.userId },
           settings: {
-            successUrl: `${window.location.origin}/dashboard?billing=success`,
+            displayMode: 'overlay',
             theme: 'dark',
+            locale: 'en',
+            successUrl: `${window.location.origin}/dashboard?billing=success`,
           },
         })
         onClose()
