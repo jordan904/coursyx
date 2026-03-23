@@ -1,19 +1,42 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { X, Zap, Crown } from 'lucide-react'
 import toast from 'react-hot-toast'
+
+// Load Paddle.js
+declare global {
+  interface Window {
+    Paddle?: any
+  }
+}
 
 interface UpgradeModalProps {
   open: boolean
   onClose: () => void
-  plan: string // current plan: 'free' | 'pro' | 'max'
+  plan: string
 }
 
 type PlanKey = 'pro_monthly' | 'pro_annual' | 'max_monthly' | 'max_annual' | 'pay_per_course'
 
 export function UpgradeModal({ open, onClose, plan }: UpgradeModalProps) {
   const [loading, setLoading] = useState<PlanKey | null>(null)
+
+  useEffect(() => {
+    // Load Paddle.js script if not already loaded
+    if (typeof window !== 'undefined' && !window.Paddle) {
+      const script = document.createElement('script')
+      script.src = 'https://cdn.paddle.com/paddle/v2/paddle.js'
+      script.async = true
+      script.onload = () => {
+        const token = process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN
+        if (token && window.Paddle) {
+          window.Paddle.Initialize({ token })
+        }
+      }
+      document.head.appendChild(script)
+    }
+  }, [])
 
   if (!open) return null
 
@@ -26,10 +49,27 @@ export function UpgradeModal({ open, onClose, plan }: UpgradeModalProps) {
         body: JSON.stringify({ plan: selectedPlan }),
       })
       const data = await res.json()
-      if (data.url) {
-        window.location.href = data.url
-      } else {
+
+      if (!data.priceId) {
         toast.error(data.error || 'Something went wrong.')
+        setLoading(null)
+        return
+      }
+
+      // Open Paddle checkout overlay
+      if (window.Paddle) {
+        window.Paddle.Checkout.open({
+          items: [{ priceId: data.priceId, quantity: 1 }],
+          customer: { email: data.email },
+          customData: { user_id: data.userId },
+          settings: {
+            successUrl: `${window.location.origin}/dashboard?billing=success`,
+            theme: 'dark',
+          },
+        })
+        onClose()
+      } else {
+        toast.error('Payment system is loading. Please try again.')
       }
     } catch {
       toast.error('Connection error. Please try again.')
@@ -45,7 +85,6 @@ export function UpgradeModal({ open, onClose, plan }: UpgradeModalProps) {
         onClick={onClose}
       />
       <div className="relative w-full max-w-md bg-[var(--card)] border border-[var(--border)] rounded-[6px] p-6">
-        {/* Close button */}
         <button
           onClick={onClose}
           className="absolute top-4 right-4 text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors duration-150"
@@ -63,7 +102,6 @@ export function UpgradeModal({ open, onClose, plan }: UpgradeModalProps) {
 
         {plan === 'free' && (
           <div className="grid grid-cols-2 gap-3 mb-4">
-            {/* Pro card */}
             <div className="border border-[var(--accent)] rounded-[6px] p-4 bg-[var(--background)] relative">
               <div className="absolute -top-2.5 left-3 bg-[var(--accent)] text-white text-[10px] font-medium px-2 py-0.5 rounded-[4px]">
                 Popular
@@ -82,11 +120,10 @@ export function UpgradeModal({ open, onClose, plan }: UpgradeModalProps) {
                 disabled={loading !== null}
                 className="w-full h-8 bg-[var(--accent)] text-white text-xs font-medium rounded-[6px] hover:opacity-90 transition-opacity duration-150 disabled:opacity-50"
               >
-                {loading === 'pro_monthly' ? 'Redirecting...' : 'Get Pro'}
+                {loading === 'pro_monthly' ? 'Loading...' : 'Get Pro'}
               </button>
             </div>
 
-            {/* Max card */}
             <div className="border border-[var(--border)] hover:border-[var(--muted-foreground)] rounded-[6px] p-4 bg-[var(--background)] transition-colors duration-150">
               <div className="flex items-center gap-1.5 mb-2">
                 <Crown className="size-4 text-[var(--foreground)]" />
@@ -102,7 +139,7 @@ export function UpgradeModal({ open, onClose, plan }: UpgradeModalProps) {
                 disabled={loading !== null}
                 className="w-full h-8 bg-[var(--muted)] text-[var(--foreground)] text-xs font-medium rounded-[6px] hover:opacity-90 transition-opacity duration-150 disabled:opacity-50"
               >
-                {loading === 'max_monthly' ? 'Redirecting...' : 'Get Max'}
+                {loading === 'max_monthly' ? 'Loading...' : 'Get Max'}
               </button>
             </div>
           </div>
@@ -125,20 +162,19 @@ export function UpgradeModal({ open, onClose, plan }: UpgradeModalProps) {
                 disabled={loading !== null}
                 className="w-full h-8 bg-[var(--accent)] text-white text-xs font-medium rounded-[6px] hover:opacity-90 transition-opacity duration-150 disabled:opacity-50"
               >
-                {loading === 'max_monthly' ? 'Redirecting...' : 'Upgrade to Max'}
+                {loading === 'max_monthly' ? 'Loading...' : 'Upgrade to Max'}
               </button>
             </div>
           </div>
         )}
 
-        {/* Pay per course link */}
         <div className="text-center">
           <button
             onClick={() => handleUpgrade('pay_per_course')}
             disabled={loading !== null}
             className="text-xs text-[var(--muted-foreground)] hover:text-[var(--accent)] transition-colors duration-150 underline underline-offset-2 disabled:opacity-50"
           >
-            {loading === 'pay_per_course' ? 'Redirecting...' : 'Buy a single course for $15'}
+            {loading === 'pay_per_course' ? 'Loading...' : 'Buy a single course for $15'}
           </button>
         </div>
       </div>
