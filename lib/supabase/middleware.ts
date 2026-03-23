@@ -25,6 +25,9 @@ export async function updateSession(request: NextRequest) {
       !request.nextUrl.pathname.startsWith('/api/verify-invite-code') &&
       !request.nextUrl.pathname.startsWith('/api/auth/signup') &&
       !request.nextUrl.pathname.startsWith('/api/billing/webhook') &&
+      !request.nextUrl.pathname.startsWith('/terms') &&
+      !request.nextUrl.pathname.startsWith('/privacy') &&
+      !request.nextUrl.pathname.startsWith('/refund') &&
       request.nextUrl.pathname !== '/') {
     const url = request.nextUrl.clone()
     url.pathname = '/login'

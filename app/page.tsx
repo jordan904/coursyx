@@ -300,6 +300,17 @@ export default function LandingPage() {
         </div>
       </div>
 
+      {/* Footer */}
+      <footer className="border-t border-[var(--border)] py-8 px-6">
+        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+          <p className="text-xs text-[var(--muted-foreground)]">Coursyx | AI Course Builder for Skool</p>
+          <div className="flex items-center gap-6">
+            <a href="/terms" className="text-xs text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors duration-150">Terms of Service</a>
+            <a href="/privacy" className="text-xs text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors duration-150">Privacy</a>
+            <a href="/refund" className="text-xs text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors duration-150">Refund Policy</a>
+          </div>
+        </div>
+      </footer>
     </main>
   )
 }
