@@ -117,7 +117,7 @@ export function UpgradeModal({ open, onClose, plan }: UpgradeModalProps) {
                 <span className="text-xl font-heading text-[var(--foreground)]">$59</span>
                 <span className="text-xs text-[var(--muted-foreground)]">/mo</span>
               </div>
-              <p className="text-[11px] text-[var(--muted-foreground)] mb-3">15 courses/month</p>
+              <p className="text-[11px] text-[var(--muted-foreground)] mb-3">5 courses/month</p>
               <button
                 onClick={() => handleUpgrade('pro_monthly')}
                 disabled={loading !== null}
@@ -136,7 +136,7 @@ export function UpgradeModal({ open, onClose, plan }: UpgradeModalProps) {
                 <span className="text-xl font-heading text-[var(--foreground)]">$99</span>
                 <span className="text-xs text-[var(--muted-foreground)]">/mo</span>
               </div>
-              <p className="text-[11px] text-[var(--muted-foreground)] mb-3">50 courses/month</p>
+              <p className="text-[11px] text-[var(--muted-foreground)] mb-3">12 courses/month</p>
               <button
                 onClick={() => handleUpgrade('max_monthly')}
                 disabled={loading !== null}
@@ -159,7 +159,7 @@ export function UpgradeModal({ open, onClose, plan }: UpgradeModalProps) {
                 <span className="text-xl font-heading text-[var(--foreground)]">$99</span>
                 <span className="text-xs text-[var(--muted-foreground)]">/mo</span>
               </div>
-              <p className="text-[11px] text-[var(--muted-foreground)] mb-3">50 courses/month</p>
+              <p className="text-[11px] text-[var(--muted-foreground)] mb-3">12 courses/month</p>
               <button
                 onClick={() => handleUpgrade('max_monthly')}
                 disabled={loading !== null}
