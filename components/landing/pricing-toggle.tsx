@@ -27,7 +27,7 @@ const plans = [
     annualNote: '~$49/mo',
     period: true,
     features: [
-      '15 courses per month',
+      '5 courses per month',
       '3 cover images per course',
       'All AI features included',
       'Quizzes & video scripts',
@@ -44,7 +44,7 @@ const plans = [
     annualNote: '~$82/mo',
     period: true,
     features: [
-      '50 courses per month',
+      '12 courses per month',
       '3 cover images per course',
       'All AI features included',
       'Quizzes & video scripts',
