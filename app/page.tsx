@@ -51,6 +51,14 @@ export default function LandingPage(): JSX.Element {
                 >
                   Log In
                 </Link>
+                <a
+                  href="https://www.tiktok.com/@novaworks.digital/video/7616781124097887508"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center h-12 px-6 text-[var(--muted-foreground)] font-medium rounded-[6px] hover:text-[var(--foreground)] transition-colors duration-150"
+                >
+                  Watch Demo
+                </a>
               </div>
               <p className="text-sm text-[var(--muted-foreground)] max-w-md">
                 Free plan includes 2 courses with all features. No credit card required.
