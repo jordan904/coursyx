@@ -2,7 +2,6 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { Navbar } from '@/components/shared/navbar'
 import { PricingToggle } from '@/components/landing/pricing-toggle'
-import { DemoVideo } from '@/components/landing/demo-video'
 
 const features = [
   { title: 'Upload anything', description: 'PDFs, YouTube links, URLs, or paste your notes directly.' },
@@ -121,26 +120,6 @@ export default function LandingPage(): JSX.Element {
             Add a single course for $15.
           </span>
         </p>
-      </div>
-
-      {/* Demo video + TikTok link */}
-      <div className="max-w-md mx-auto px-6 pb-24">
-        <div className="animate-fade-up" style={{ animationDelay: '600ms' }}>
-          <DemoVideo />
-          <div className="mt-4 text-center">
-            <a
-              href="https://www.tiktok.com/@novaworks.digital/video/7616781124097887508"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 text-[var(--accent)] hover:opacity-80 transition-opacity duration-150 font-medium"
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1v-3.5a6.37 6.37 0 0 0-.79-.05A6.34 6.34 0 0 0 3.15 15a6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.34-6.34V8.87a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1.01-.3z"/>
-              </svg>
-              Follow us on TikTok
-            </a>
-          </div>
-        </div>
       </div>
 
       {/* Footer */}
