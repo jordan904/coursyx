@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import Image from 'next/image'
+import Link from 'next/link'
 import { Navbar } from '@/components/shared/navbar'
 
 const features = [
@@ -54,18 +55,18 @@ export default function LandingPage() {
               style={{ animationDelay: '160ms' }}
             >
               <div className="flex items-center gap-3 flex-wrap">
-                <a
+                <Link
                   href="/signup"
                   className="inline-flex items-center justify-center h-12 px-8 bg-[var(--accent)] text-white font-medium rounded-[6px] hover:opacity-90 transition-opacity duration-150"
                 >
                   Start Free
-                </a>
-                <a
+                </Link>
+                <Link
                   href="/login"
                   className="inline-flex items-center justify-center h-12 px-6 border border-[var(--border)] text-[var(--foreground)] font-medium rounded-[6px] hover:bg-[var(--card)] transition-colors duration-150"
                 >
                   Log In
-                </a>
+                </Link>
               </div>
               <p className="text-sm text-[var(--muted-foreground)] max-w-md">
                 Free plan includes 2 courses with all features. No credit card required.
@@ -178,12 +179,12 @@ export default function LandingPage() {
                 </li>
               ))}
             </ul>
-            <a
+            <Link
               href="/signup"
               className="inline-flex items-center justify-center h-11 px-6 border border-[var(--border)] text-[var(--foreground)] font-medium rounded-[6px] hover:bg-[var(--muted)] transition-colors duration-150 text-sm w-full"
             >
               Get Started Free
-            </a>
+            </Link>
           </div>
 
           {/* Pro */}
@@ -217,12 +218,12 @@ export default function LandingPage() {
                 </li>
               ))}
             </ul>
-            <a
+            <Link
               href="/signup"
               className="inline-flex items-center justify-center h-11 px-6 bg-[var(--accent)] text-white font-medium rounded-[6px] hover:opacity-90 transition-opacity duration-150 text-sm w-full"
             >
               Start Pro
-            </a>
+            </Link>
           </div>
 
           {/* Max */}
@@ -253,12 +254,12 @@ export default function LandingPage() {
                 </li>
               ))}
             </ul>
-            <a
+            <Link
               href="/signup"
               className="inline-flex items-center justify-center h-11 px-6 border border-[var(--border)] text-[var(--foreground)] font-medium rounded-[6px] hover:bg-[var(--muted)] transition-colors duration-150 text-sm w-full"
             >
               Start Max
-            </a>
+            </Link>
           </div>
         </div>
 
@@ -305,9 +306,9 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-xs text-[var(--muted-foreground)]">Coursyx | AI Course Builder for Skool</p>
           <div className="flex items-center gap-6">
-            <a href="/terms" className="text-xs text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors duration-150">Terms of Service</a>
-            <a href="/privacy" className="text-xs text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors duration-150">Privacy</a>
-            <a href="/refund" className="text-xs text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors duration-150">Refund Policy</a>
+            <Link href="/terms" className="text-xs text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors duration-150">Terms of Service</Link>
+            <Link href="/privacy" className="text-xs text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors duration-150">Privacy</Link>
+            <Link href="/refund" className="text-xs text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors duration-150">Refund Policy</Link>
           </div>
         </div>
       </footer>
